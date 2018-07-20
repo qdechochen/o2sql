@@ -1,5 +1,5 @@
 {
-  "name": "o2sql",
+  "name": "osql",
   "version": "0.1.0",
   "description": "",
   "main": "index.js",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://192.168.31.10:9175/open-source/o2sql.git"
+    "url": "http://192.168.31.10:9175/open-source/osql.git"
   },
   "author": "Echo Chen <qdechochen@gmail.com>",
   "license": "ISC",
