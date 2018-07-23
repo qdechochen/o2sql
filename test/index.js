@@ -43,9 +43,12 @@ const o2s = osql('insert').into('users').values([{
 }]).returning(['id', 'name']);
 */
 
-const o2s = osql('count').from('user').where({
+const o2s = osql('select').from('user').where({
   id: 1,
   name: 'Echo',
+  title: {
+    like: '%abc',
+  }
 });
 
 // const o2s = o2sql('delete').from('user').where({ id: 2 });
