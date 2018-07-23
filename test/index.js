@@ -1,4 +1,4 @@
-const o2sql = require('../index');
+const osql = require('../index');
 const ast2sql = require('../lib/ast2sql.js');
 /*
 const o2s = o2sql('select');
@@ -33,7 +33,7 @@ o2s.from({
   .skip(8);
 */
 
-const o2s = o2sql('insert').into('users').values([{
+const o2s = osql('insert').into('users').values([{
   id: 1,
   name: 'Echo Chen',
 }, {

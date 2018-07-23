@@ -14,6 +14,6 @@
     "no-use-before-define": 0
   },
   "parserOptions": {
-    "ecmaVersion": 2015
+    "ecmaVersion": 2017
   }
 }
