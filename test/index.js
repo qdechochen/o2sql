@@ -1,8 +1,9 @@
 const osql = require('../index');
 const ast2sql = require('../lib/ast2sql.js');
-/*
-const o2s = o2sql('select');
-o2s.from({
+
+
+const o2s1 = osql('select');
+o2s1.from({
   left: {
     left: {
       name: 'user',
@@ -22,7 +23,7 @@ o2s.from({
   },
 }).columns([{
   table: 'U', prefix: 'user', separator: '_', fields: ['id', 'name']
-}, 'id', 'name', ['class', 'className'], [o2sql.parse('convert(a, 101)'), 'dt']]).where({
+}, 'id', 'name', ['class', 'className'], [osql.parse('convert(a, 101)'), 'dt']]).where({
   a: 1,
   b: 2,
   e: 'abcd',
@@ -31,8 +32,8 @@ o2s.from({
   .orderby(['a.id', '-b.id', ['c.id', 'desc']])
   .limit(4)
   .skip(8);
-*/
 
+/*
 const o2s = osql('insert').into('users').values([{
   id: 1,
   name: 'Echo Chen',
@@ -40,8 +41,15 @@ const o2s = osql('insert').into('users').values([{
   id: 12,
   name: 'Echo Chen2',
 }]).returning(['id', 'name']);
+*/
+
+const o2s = osql('count').from('user').where({
+  id: 1,
+  name: 'Echo',
+});
 
 // const o2s = o2sql('delete').from('user').where({ id: 2 });
 console.dir(o2s);
 console.log(JSON.stringify(o2s.ast, 2, 2));
 console.log(o2s.toParams());
+console.log(o2s1.toParams());

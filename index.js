@@ -1,4 +1,4 @@
-const { Command } = require('./command');
+const { Command } = require('./lib/command');
 const Osql = require('./lib/osql');
 const parse = require('./lib/pegjs-parser').parse;
 
