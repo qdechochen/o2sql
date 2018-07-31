@@ -52,7 +52,7 @@ const o2s = osql('select').from('user').where({
 });
 
 // const o2s = o2sql('delete').from('user').where({ id: 2 });
-console.dir(o2s);
-console.log(JSON.stringify(o2s.ast, 2, 2));
-console.log(o2s.toParams());
+// console.dir(o2s);
+console.log(JSON.stringify(o2s1.ast, 2, 2));
+// console.log(o2s.toParams());
 console.log(o2s1.toParams());
