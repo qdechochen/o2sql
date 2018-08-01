@@ -51,8 +51,10 @@ const o2s2 = osql('update').table('users').set({
 }).where({ id: 1 });
 
 const o2s = osql('select').from('user').where({
-  id: 1,
-  name: 'Echo',
+  id: null,
+  name: {
+    'IS NOT': null,
+  },
   title: {
     like: '%abc',
   }
@@ -61,5 +63,5 @@ const o2s = osql('select').from('user').where({
 // const o2s = o2sql('delete').from('user').where({ id: 2 });
 // console.dir(o2s);
 // console.log(o2s.toParams());
-console.log(JSON.stringify(o2s2.ast, 2, 2));
-console.log(o2s2.toParams());
+console.log(JSON.stringify(o2s.ast, 2, 2));
+console.log(o2s.toParams());
