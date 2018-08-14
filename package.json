@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "eslint": "^4.15.0",
+    "typescript": "^2.8.4",
     "webpack": "^3.6.0"
   },
   "repository": {

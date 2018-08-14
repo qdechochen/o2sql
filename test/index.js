@@ -1,7 +1,7 @@
 const osql = require('../index');
 const ast2sql = require('../lib/ast2sql.js');
 
-
+/*
 const o2s1 = osql('select');
 o2s1.from({
   left: {
@@ -43,12 +43,14 @@ const o2s2 = osql('insert').into('users').values([{
   id: 12,
   name: 'Echo Chen2',
 }]).returning(['id', 'name']);
-*/
+
+const ids = [1, 2, 3];
 const o2s2 = osql('update').table('users').set({
   id: 1,
   name: 'Echo Chen',
-  age: osql.parse('age+1')
-}).where({ id: 1 });
+}).where({
+  $$: `id=ANY(${ids})`,
+});
 
 const o2s = osql('select').from('user').where({
   id: null,
@@ -57,11 +59,29 @@ const o2s = osql('select').from('user').where({
   },
   title: {
     like: '%abc',
-  }
+  },
+  age: [1, 2, 3],
 });
 
 // const o2s = o2sql('delete').from('user').where({ id: 2 });
 // console.dir(o2s);
 // console.log(o2s.toParams());
+/*
 console.log(JSON.stringify(o2s.ast, 2, 2));
 console.log(o2s.toParams());
+console.dir(JSON.stringify(osql.parse('select did from usder where id in (select id from classs)'), 2, 2));
+
+*/
+console.log('==========');
+const o2s3 = osql('select').from('user').where({
+  id: 2,
+  age: {
+    IN: osql('select').from('ua').columns(['age']).where({
+      tt: 3,
+    }).ast,
+  },
+});
+const a = 3;
+const b = 3;
+console.log(JSON.stringify(o2s3.ast, 2, 2));
+console.log(o2s3.toParams());
