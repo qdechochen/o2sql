@@ -41,6 +41,11 @@ const o2s2 = osql('select').from({
   e: 'abcd',
   $or: { c: 3, d: 4 }
   $$: `'abc'=ANY("ancestors")`,
+  age: {
+    IN: osql.select(['age']).from('ua').where({
+      tt: 3,
+    }).ast,
+  },
 }).groupby(['a.id', 'b.id'])
   .orderby(['a.id', '-b.id', ['c.id', 'desc']])
   .limit(4)
