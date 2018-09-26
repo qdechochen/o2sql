@@ -80,6 +80,7 @@ const o2s3 = osql.select(['a', 'b']).from('user').where({
       tt: 3,
     }).ast,
   },
+  $$: 'now() - sentAt <= \'10 minutes\'',
 });
 const a = 3;
 const b = 3;
@@ -87,4 +88,17 @@ console.log(JSON.stringify(o2s3.ast, 2, 2));
 console.log(o2s3.toParams());
 
 
-console.log(osql.select().from('user').where(2).toParams());
+console.log(JSON.stringify(osql.select().from('user').where({
+  id: 2,
+  sentAt: {
+    '>=': osql.parse('now() - cast(\'10 minutes\' as integer)'),
+  },
+}).ast, 2, 2));
+
+
+console.log(osql.select().from('user').where({
+  id: 2,
+  sentAt: {
+    '>=': osql.parse('now() - cast(\'10 minutes\' as INTERVAL)'),
+  },
+}).toParams());
