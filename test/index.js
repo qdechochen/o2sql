@@ -62,18 +62,18 @@ const o2s = osql('select').from('user').where({
   },
   age: [1, 2, 3],
 });
+*/
+const o2s = osql('delete').from('user').where({ id: 2 });
+console.dir(o2s);
+console.log(o2s.toParams());
 
-// const o2s = o2sql('delete').from('user').where({ id: 2 });
-// console.dir(o2s);
-// console.log(o2s.toParams());
-/*
 console.log(JSON.stringify(o2s.ast, 2, 2));
 console.log(o2s.toParams());
 console.dir(JSON.stringify(osql.parse('select did from usder where id in (select id from classs)'), 2, 2));
 
-*/
+
 console.log('==========');
-const o2s3 = osql('select').from('user').where({
+const o2s3 = osql.select(['a', 'b']).from('user').where({
   id: 2,
   age: {
     IN: osql('select').from('ua').columns(['age']).where({
