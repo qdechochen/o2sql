@@ -85,3 +85,6 @@ const a = 3;
 const b = 3;
 console.log(JSON.stringify(o2s3.ast, 2, 2));
 console.log(o2s3.toParams());
+
+
+console.log(osql.select().from('user').where(2).toParams());
