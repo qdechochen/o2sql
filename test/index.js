@@ -101,4 +101,5 @@ console.log(osql.select().from('project').where({
   sector: {
     '&&': ['a', 'b', 'c'],
   },
+  kind: ['a', 'b', 'c']
 }).toParams());
