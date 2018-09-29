@@ -96,9 +96,9 @@ console.log(JSON.stringify(osql.select().from('user').where({
 }).ast, 2, 2));
 
 
-console.log(osql.select().from('user').where({
-  id: 2,
-  sentAt: {
-    '>=': osql.parse('now() - cast(\'10 minutes\' as INTERVAL)'),
+console.log(osql.select().from('project').where({
+  id: 1,
+  sector: {
+    '&&': ['a', 'b', 'c'],
   },
 }).toParams());
