@@ -46,6 +46,19 @@ const o2s2 = osql('select').from({
       tt: 3,
     }).ast,
   },
+  sector: {
+    '&&': ['a', 'b', 'c'],
+  },
+  $$2: {
+    left: osql.parse('f(2,3)'),
+    op: '>=',
+    right: osql.parse('f(3,4)'),
+  },
+  $$3: {
+    left: 'f1',
+    op: '>=',
+    right: osql.parse('f(3,4)'),
+  },
 }).groupby(['a.id', 'b.id'])
   .orderby(['a.id', '-b.id', ['c.id', 'desc']])
   .limit(4)
