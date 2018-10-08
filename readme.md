@@ -65,6 +65,10 @@ const o2s2 = osql('select').from({
   .skip(8);
 
 console.log(o2s2.toParams);
+
+osql.select(['f1', 'f2])
+  .from('tableName')
+  ....
 ```
 
 ## get
@@ -75,6 +79,8 @@ const o2s = osql('get').from('user')
   })
 
 console.log(o2s.toParams);
+osql.get(['f1', 'f2])
+  .from('tableName')
 ```
 
 ## insert
@@ -85,8 +91,22 @@ const o2s = osql('insert').into('user')
     age: 34,
   })
   .returning(['id']);
-
 console.log(o2s.toParams);
+
+osql.insert({
+  name: 'Echo',
+  age: 34,
+})
+  .into('user')
+  .returning(['id'])
+  
+osql.insertInto('user')
+  .values({
+    name: 'Echo',
+    age: 34,
+  })
+  .returning(['id'])
+
 ```
 
 ## update
@@ -95,13 +115,18 @@ const o2s = osql('update').table('user')
   .set({
     name: 'Echo',
     age: 34,
-    count: osql.parse('count+1'),
+    count: osql.parse('"count" + 1'),
   })
   .where({
     id: 1,
   });
 
 console.log(o2s.toParams);
+osql.update('tableName')
+  .set({
+    name: 'Echo',
+  })
+  ....
 ```
 
 ## delete
@@ -112,6 +137,7 @@ const o2s = osql('delete').from('user')
   })
 
 console.log(o2s.toParams);
+osql.delete('user').where(...);
 ```
 
 ## execute handler (working with pg)
