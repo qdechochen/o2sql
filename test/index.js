@@ -103,3 +103,14 @@ console.log(osql.select().from('project').where({
   },
   kind: ['a', 'b', 'c']
 }).toParams());
+
+console.log(osql.insertInto('project')
+  .values([{
+    favs: 3,
+    likes: 5,
+  }, {
+    favs: osql.count('ua').where({
+      tt: 3,
+    }),
+    likes: null,
+  }]).toParams());

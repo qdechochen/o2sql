@@ -86,10 +86,17 @@ osql.get(['f1', 'f2])
 ## insert
 ```
 const o2s = osql('insert').into('user')
-  .set({
+  .values([{
     name: 'Echo',
     age: 34,
-  })
+    likes: osql.count('ul').where({
+      tt: 3,
+    })
+  }, {
+    name: 'Echo',
+    age: 34,
+    likes: 5,
+  }])
   .returning(['id']);
 console.log(o2s.toParams);
 
@@ -116,6 +123,9 @@ const o2s = osql('update').table('user')
     name: 'Echo',
     age: 34,
     count: osql.parse('"count" + 1'),
+    likes: osql.count('ul').where({
+      tt: 3,
+    })
   })
   .where({
     id: 1,
