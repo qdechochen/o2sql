@@ -178,10 +178,9 @@ osql.setOnExecuteHandler(async function({ sql: text, values }, client) {
 });
 
 
-// use execute
-const user = await osql('get')
+// execute
+const user = await osql.get(['name', 'age'])
   .from('user')
-  .select(['name', 'age'])
   .where({
     id: 1,
   })

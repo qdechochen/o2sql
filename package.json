@@ -1,24 +1,26 @@
 {
-  "name": "osql",
-  "version": "0.1.22",
-  "description": "",
+  "name": "o2sql",
+  "version": "1.0.0",
+  "description": "A tool to generate postgres queries",
   "main": "index.js",
   "scripts": {
     "test": "node ./test/index.js"
   },
-  "devDependencies": {
-    "eslint": "^4.15.0",
-    "typescript": "^2.8.4",
-    "webpack": "^3.6.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "http://192.168.31.10:9175/open-source/osql.git"
-  },
-  "author": "Echo Chen <qdechochen@gmail.com>",
-  "license": "ISC",
   "dependencies": {
     "eslint-config-airbnb": "^17.0.0",
     "eslint-plugin-import": "^2.13.0"
-  }
+  },
+  "devDependencies": {
+    "eslint": "^4.15.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qdechochen/osql.git"
+  },
+  "files": [
+    "lib",
+    "index.js"
+  ],
+  "author": "Echo Chen <qdechochen@gmail.com>",
+  "license": "ISC"
 }
