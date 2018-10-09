@@ -1,8 +1,8 @@
 const { setOnExecuteHandler } = require('./lib/command');
-const osql = require('./lib/osql');
+const o2sql = require('./lib/o2sql');
 const parse = require('./lib/pegjs-parser').parse;
 
-osql.parse = parse;
-osql.setOnExecuteHandler = cb => setOnExecuteHandler(cb);
+o2sql.parse = parse;
+o2sql.setOnExecuteHandler = cb => setOnExecuteHandler(cb);
 
-module.exports = osql;
+module.exports = o2sql;

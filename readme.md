@@ -1,10 +1,10 @@
-## osql
+## o2sql
 
 
 ## select
 ```
 // simple eg.
-const o2s1 = osql('select')
+const o2s1 = o2sql('select')
   .from('user')
   .columns(['id', 'name'])
   .where({
@@ -14,7 +14,7 @@ const o2s1 = osql('select')
 console.log(o2s1.toParams);
 
 // complex eg.
-const o2s2 = osql('select').from({
+const o2s2 = o2sql('select').from({
   left: {
     left: {
       name: 'user',
@@ -34,7 +34,7 @@ const o2s2 = osql('select').from({
   },
 }).columns([{
   table: 'U', prefix: 'user', separator: '_', fields: ['id', 'name']
-}, 'id', 'name', ['class', 'className'], [osql.parse('convert(a, 101)'), 'dt']])
+}, 'id', 'name', ['class', 'className'], [o2sql.parse('convert(a, 101)'), 'dt']])
 .where({
   a: 1,
   b: 2,
@@ -42,7 +42,7 @@ const o2s2 = osql('select').from({
   $or: { c: 3, d: 4 }
   $$: `'abc'=ANY("ancestors")`,
   age: {
-    IN: osql.select(['age']).from('ua').where({
+    IN: o2sql.select(['age']).from('ua').where({
       tt: 3,
     }).ast,
   },
@@ -50,14 +50,14 @@ const o2s2 = osql('select').from({
     '&&': ['a', 'b', 'c'],
   },
   $$2: {
-    left: osql.parse('f(2,3)'),
+    left: o2sql.parse('f(2,3)'),
     op: '>=',
-    right: osql.parse('f(3,4)'),
+    right: o2sql.parse('f(3,4)'),
   },
   $$3: {
     left: 'f1',
     op: '>=',
-    right: osql.parse('f(3,4)'),
+    right: o2sql.parse('f(3,4)'),
   },
 }).groupby(['a.id', 'b.id'])
   .orderby(['a.id', '-b.id', ['c.id', 'desc']])
@@ -66,30 +66,30 @@ const o2s2 = osql('select').from({
 
 console.log(o2s2.toParams);
 
-osql.select(['f1', 'f2])
+o2sql.select(['f1', 'f2])
   .from('tableName')
   ....
 ```
 
 ## get
 ```
-const o2s = osql('get').from('user')
+const o2s = o2sql('get').from('user')
   .where({
     id: 1,
   })
 
 console.log(o2s.toParams);
-osql.get(['f1', 'f2])
+o2sql.get(['f1', 'f2])
   .from('tableName')
 ```
 
 ## insert
 ```
-const o2s = osql('insert').into('user')
+const o2s = o2sql('insert').into('user')
   .values([{
     name: 'Echo',
     age: 34,
-    likes: osql.count('ul').where({
+    likes: o2sql.count('ul').where({
       tt: 3,
     })
   }, {
@@ -100,14 +100,14 @@ const o2s = osql('insert').into('user')
   .returning(['id']);
 console.log(o2s.toParams);
 
-osql.insert({
+o2sql.insert({
   name: 'Echo',
   age: 34,
 })
   .into('user')
   .returning(['id'])
   
-osql.insertInto('user')
+o2sql.insertInto('user')
   .values({
     name: 'Echo',
     age: 34,
@@ -118,12 +118,12 @@ osql.insertInto('user')
 
 ## update
 ```
-const o2s = osql('update').table('user')
+const o2s = o2sql('update').table('user')
   .set({
     name: 'Echo',
     age: 34,
-    count: osql.parse('"count" + 1'),
-    likes: osql.count('ul').where({
+    count: o2sql.parse('"count" + 1'),
+    likes: o2sql.count('ul').where({
       tt: 3,
     })
   })
@@ -132,7 +132,7 @@ const o2s = osql('update').table('user')
   });
 
 console.log(o2s.toParams);
-osql.update('tableName')
+o2sql.update('tableName')
   .set({
     name: 'Echo',
   })
@@ -141,13 +141,13 @@ osql.update('tableName')
 
 ## delete
 ```
-const o2s = osql('delete').from('user')
+const o2s = o2sql('delete').from('user')
   .where({
     id: 1,
   })
 
 console.log(o2s.toParams);
-osql.delete('user').where(...);
+o2sql.delete('user').where(...);
 ```
 
 ## execute handler (working with pg)
@@ -155,7 +155,7 @@ osql.delete('user').where(...);
 // set execute handler when init your app
 const pool = new Pool(config);
 
-osql.setOnExecuteHandler(async function({ sql: text, values }, client) {
+o2sql.setOnExecuteHandler(async function({ sql: text, values }, client) {
   console.dir({
     text,
     values,
@@ -179,7 +179,7 @@ osql.setOnExecuteHandler(async function({ sql: text, values }, client) {
 
 
 // execute
-const user = await osql.get(['name', 'age'])
+const user = await o2sql.get(['name', 'age'])
   .from('user')
   .where({
     id: 1,

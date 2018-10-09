@@ -1,8 +1,8 @@
-const osql = require('../index');
+const o2sql = require('../index');
 const ast2sql = require('../lib/ast2sql.js');
 
 /*
-const o2s1 = osql('select');
+const o2s1 = o2sql('select');
 o2s1.from({
   left: {
     left: {
@@ -23,7 +23,7 @@ o2s1.from({
   },
 }).columns([{
   table: 'U', prefix: 'user', separator: '_', fields: ['id', 'name']
-}, 'id', 'name', ['class', 'className'], [osql.parse('convert(a, 101)'), 'dt']])
+}, 'id', 'name', ['class', 'className'], [o2sql.parse('convert(a, 101)'), 'dt']])
   .where({
     a: 1,
     b: 2,
@@ -36,7 +36,7 @@ o2s1.from({
   .skip(8);
 
 /*
-const o2s2 = osql('insert').into('users').values([{
+const o2s2 = o2sql('insert').into('users').values([{
   id: 1,
   name: 'Echo Chen',
 }, {
@@ -45,14 +45,14 @@ const o2s2 = osql('insert').into('users').values([{
 }]).returning(['id', 'name']);
 
 const ids = [1, 2, 3];
-const o2s2 = osql('update').table('users').set({
+const o2s2 = o2sql('update').table('users').set({
   id: 1,
   name: 'Echo Chen',
 }).where({
   $$: `id=ANY(${ids})`,
 });
 
-const o2s = osql('select').from('user').where({
+const o2s = o2sql('select').from('user').where({
   id: null,
   name: {
     'IS NOT': null,
@@ -63,20 +63,20 @@ const o2s = osql('select').from('user').where({
   age: [1, 2, 3],
 });
 */
-const o2s = osql('delete').from('user').where({ id: 2 });
+const o2s = o2sql('delete').from('user').where({ id: 2 });
 console.dir(o2s);
 console.log(o2s.toParams());
 
 console.log(JSON.stringify(o2s.ast, 2, 2));
 console.log(o2s.toParams());
-console.dir(JSON.stringify(osql.parse('select did from usder where id in (select id from classs)'), 2, 2));
+console.dir(JSON.stringify(o2sql.parse('select did from usder where id in (select id from classs)'), 2, 2));
 
 
 console.log('==========');
-const o2s3 = osql.select(['a', 'b']).from('user').where({
+const o2s3 = o2sql.select(['a', 'b']).from('user').where({
   id: 2,
   age: {
-    IN: osql('select').from('ua').columns(['age']).where({
+    IN: o2sql('select').from('ua').columns(['age']).where({
       tt: 3,
     }).ast,
   },
@@ -88,15 +88,15 @@ console.log(JSON.stringify(o2s3.ast, 2, 2));
 console.log(o2s3.toParams());
 
 
-console.log(JSON.stringify(osql.select().from('user').where({
+console.log(JSON.stringify(o2sql.select().from('user').where({
   id: 2,
   sentAt: {
-    '>=': osql.parse('now() - cast(\'10 minutes\' as integer)'),
+    '>=': o2sql.parse('now() - cast(\'10 minutes\' as integer)'),
   },
 }).ast, 2, 2));
 
 
-console.log(osql.select().from('project').where({
+console.log(o2sql.select().from('project').where({
   id: 1,
   sector: {
     '&&': ['a', 'b', 'c'],
@@ -104,12 +104,12 @@ console.log(osql.select().from('project').where({
   kind: ['a', 'b', 'c']
 }).toParams());
 
-console.log(osql.insertInto('project')
+console.log(o2sql.insertInto('project')
   .values([{
     favs: 3,
     likes: 5,
   }, {
-    favs: osql.count('ua').where({
+    favs: o2sql.count('ua').where({
       tt: 3,
     }),
     likes: null,
