@@ -151,4 +151,19 @@ console.dir(o2sql('select').from({
 
 
 console.dir(o2sql('select').columns([{ table: 'user', fields: ['name', 'age'] }]).from({ left: { name: 'user', alias: 'U' }, right: 'company' }).where({ 'user.id': 1 })
-.toParams());
+  .toParams());
+
+console.dir(o2sql
+  .get(['a', 'b'])
+  .from({
+    left: {
+      name: 'company',
+      key: 'userId',
+    },
+    right: 'user',
+  })
+  .where({
+    id: {
+      IN: o2sql.select(['id']).from('user').where(1),
+    },
+  }).toParams());
