@@ -150,4 +150,4 @@ console.dir(o2sql('select').from({
   .toParams());
 
 
-console.dir(o2sql('select').from({ left: { name: 'user', alias: 'U' }, right: 'company' }).toParams());
+console.dir(o2sql('select').from({ left: { name: 'user', alias: 'U' }, right: 'company' }).where({ 'user.id': 1 }).toParams());
