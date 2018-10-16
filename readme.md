@@ -1,5 +1,14 @@
 ## o2sql
 
+A simple tools to help generate postgres queries. 
+
+.toParams() will retun:
+```
+{
+  sql: '....',
+  values: [...],
+}
+```
 
 ## select
 ```
@@ -11,7 +20,7 @@ const o2s1 = o2sql('select')
     id: 1,
   })
 
-console.log(o2s1.toParams);
+console.log(o2s1.toParams());
 
 // complex eg.
 const o2s2 = o2sql('select').from({
@@ -64,7 +73,7 @@ const o2s2 = o2sql('select').from({
   .limit(4)
   .skip(8);
 
-console.log(o2s2.toParams);
+console.log(o2s2.toParams());
 
 o2sql.select(['f1', 'f2])
   .from('tableName')
@@ -78,7 +87,7 @@ const o2s = o2sql('get').from('user')
     id: 1,
   })
 
-console.log(o2s.toParams);
+console.log(o2s.toParams());
 o2sql.get(['f1', 'f2])
   .from('tableName')
 ```
@@ -98,7 +107,7 @@ const o2s = o2sql('insert').into('user')
     likes: 5,
   }])
   .returning(['id']);
-console.log(o2s.toParams);
+console.log(o2s.toParams());
 
 o2sql.insert({
   name: 'Echo',
@@ -131,7 +140,7 @@ const o2s = o2sql('update').table('user')
     id: 1,
   });
 
-console.log(o2s.toParams);
+console.log(o2s.toParams());
 o2sql.update('tableName')
   .set({
     name: 'Echo',
@@ -146,7 +155,7 @@ const o2s = o2sql('delete').from('user')
     id: 1,
   })
 
-console.log(o2s.toParams);
+console.log(o2s.toParams());
 o2sql.delete('user').where(...);
 ```
 
