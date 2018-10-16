@@ -163,7 +163,5 @@ console.dir(o2sql
     right: 'user',
   })
   .where({
-    id: {
-      IN: o2sql.select(['id']).from('user').where(1),
-    },
+    id: o2sql.select(['id']).from('user').where(1),
   }).toParams());
