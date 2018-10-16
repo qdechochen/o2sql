@@ -153,15 +153,54 @@ console.dir(o2sql('select').from({
 console.dir(o2sql('select').columns([{ table: 'user', fields: ['name', 'age'] }]).from({ left: { name: 'user', alias: 'U' }, right: 'company' }).where({ 'user.id': 1 })
   .toParams());
 
-console.dir(o2sql
-  .get(['a', 'b'])
-  .from({
+console.dir(o2sql('select').from({
+  left: {
     left: {
-      name: 'company',
-      key: 'userId',
+      name: 'user',
+      alias: 'U',
+      key: 'classId',
     },
-    right: 'user',
-  })
+    right: {
+      name: 'class',
+      alias: 'C',
+      key: 'id',
+    },
+    key: 'U.gradeId',
+  },
+  right: {
+    name: 'grade',
+    alias: 'G',
+  },
+}).columns([{
+  table: 'U', prefix: 'user', separator: '_', fields: ['id', 'name']
+}, 'id', 'name', ['class', 'className'], [o2sql.parse('convert(a, 101)'), 'dt']])
   .where({
-    id: o2sql.select(['id']).from('user').where(1),
-  }).toParams());
+    a: 1,
+    b: 2,
+    e: 'abcd',
+    $or: { c: 3, d: 4 },
+    $$: '\'abc\'=ANY("ancestors")',
+    age: {
+      IN: o2sql.select(['age']).from('ua').where({
+        tt: 3,
+      }).ast,
+    },
+    sector: {
+      '&&': ['a', 'b', 'c'],
+    },
+    $$2: { // just needs to start with $$.
+      left: o2sql.parse('f(2,3)'),
+      op: '>=',
+      right: o2sql.parse('f(3,4)'),
+    },
+    $$3: {
+      left: 'f1',
+      op: '>=',
+      right: o2sql.parse('f(3,4)'),
+    },
+  })
+  .groupby(['a.id', 'b.id'])
+  .orderby(['a.id', '-b.id', ['c.id', 'desc']])
+  .limit(4)
+  .skip(8)
+  .toParams());
