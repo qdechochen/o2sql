@@ -10,8 +10,23 @@ A very simple tool to help generate postgres queries. "" will be added to table/
 }
 ```
 
+## toParams
+```
+o2sql.select(['id', 'name'])
+  .from('user')
+  .where(4)
+  .toParams();
+```
+```
+{
+  sql: 'select "id", "name" from "user" where "id" = $1',
+  values: [4],
+}
+```
+
+
 ## parse
-Parse a sql string to ast.
+Parse a sql string to ast. You need to make sure the string you pass is part of standard sql.
 ```
 o2sql.parse('count + my_func(p1, p2, 4)')
 ```
@@ -58,7 +73,7 @@ paginate(page, pageSize) is short for:
 //
 "id", "name", "gender", "groupId", "groupName", "groupKind", "company_id", "company_name"
 ```
-Mixed usage is also supported, but you need to make sure plain fields is unique.
+Mixed usage is also supported, but you need to make sure every plain field is unique.
 ```
 ['firstName', 'lastName', {
   table: 'group',
@@ -149,14 +164,19 @@ Mixed usage is also supported, but you need to make sure plain fields is unique.
 
 ### About where:
 
+#### Number/String
+where(8) is short for where({ id: 8 })
+
+
 #### AND
 ```
 {
   groupId: 3,
   gender: 'M',
 }
-// groupId=3 AND gender='M'
+// "groupId" = $2 AND "gender" = $1
 ```
+$1, $2 will be pushed in **values**
 
 #### OR
 ```
@@ -168,7 +188,6 @@ Mixed usage is also supported, but you need to make sure plain fields is unique.
 }
 // ("groupId" = $2 OR "gender" = $1)
 ```
-$1, $2 will be pushed in **values**
 
 #### Other operators
 ```
@@ -330,11 +349,14 @@ o2sql.update('user')
 ```
 ## delete
 ```
+o2sql.delete('user').where(2)
+
 o2sql.delete('user')
   .where({
     id: 1,
   })
 ```
+where is required for delete, in case you delete all records.
 
 
 ## execute handler (working with pg)
