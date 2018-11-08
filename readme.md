@@ -1,8 +1,8 @@
-## o2sql
+# o2sql
 
-A simple tools to help generate postgres queries. 
+A very simple tool to help generate postgres queries. "" will be added to table/field names.
 
-.toParams() will retun:
+.toParams() will retun the following object, which could be used in node-postgres (https://www.npmjs.com/package/pg) directly.
 ```
 {
   sql: '....',
@@ -10,121 +10,273 @@ A simple tools to help generate postgres queries.
 }
 ```
 
+## parse
+Parse a sql string to ast.
+```
+o2sql.parse('count + my_func(p1, p2, 4)')
+```
+
 ## select
 ```
-// simple eg.
-const o2s1 = o2sql('select')
-  .from('user')
-  .columns(['id', 'name'])
-  .where({
-    id: 1,
-  })
+o2sql.select(columns)
+  .from(table)
+  .where(conditions)
+  .groupby(groupby)
+  .orderby(orderby)
+  .having(having)
+  .limit(limit)
+  .skip(skip)
+```
 
-console.log(o2s1.toParams());
+paginate(page, pageSize) is short for:
+```
+  limit(pageSize).skip(pageSize * (page - 1))
+```
 
-// complex eg.
-const o2s2 = o2sql('select').from({
+### About columns:
+#### Basic (plain)
+```
+['id', 'gender', ['name', 'userName']]
+// "id", "gender", "name" AS "userName"
+```
+
+#### Multi table
+```
+[{
+  table: 'user',
+  fields: ['id', 'name', 'gender'],
+}, {
+  table: 'group',
+  fields: ['id', 'name', ['category', 'kind'],
+  prefix: 'group',
+}, {
+  table: 'company',
+  fields: ['id', 'name'],
+  prefix: 'company',
+  separator: '_',
+}]
+//
+"id", "name", "gender", "groupId", "groupName", "groupKind", "company_id", "company_name"
+```
+Mixed usage is also supported, but you need to make sure plain fields is unique.
+```
+['firstName', 'lastName', {
+  table: 'group',
+  fields: ['id', 'name', ['category', 'kind'],
+  prefix: 'group',
+}]
+```
+
+### About tables:
+#### Basic (plain)
+```
+'user'
+```
+#### Join
+```
+{
   left: {
+    name: 'user',
+    key: 'groupId',
+  },
+  right: {
+    name: 'group',
+    key: 'id',
+  },
+}
+// "user" INNER JOIN "group" ON "user"."groupId"="group"."id"
+```
+```
+{
+  left: {
+    name: 'user',
+    alias: 'U',
+  },
+  right: {
+    name: 'group',
+    alias: 'G',
+  },
+  join: 'LEFT JOIN',
+  on: 'U.groupId=G.id'
+}
+// "user" "U" LEFT JOIN "group" "G" ON "U"."groupId" = "G"."id"
+```
+```
+{
+  right: {
     left: {
       name: 'user',
       alias: 'U',
-      key: 'classId',
     },
     right: {
-      name: 'class',
-      alias: 'C',
-      key: 'id',
+      name: 'group',
+      alias: 'G',
     },
-    key: 'U.gradeId',
+    join: 'LEFT JOIN',
+    on: 'U.groupId=G.id',
+    key: 'U.companyId',
   },
   right: {
-    name: 'grade',
-    alias: 'G',
+    name: 'company',
+    key: 'id',
   },
-}).columns([{
-  table: 'U', prefix: 'user', separator: '_', fields: ['id', 'name']
-}, 'id', 'name', ['class', 'className'], [o2sql.parse('convert(a, 101)'), 'dt']])
-.where({
-  a: 1,
-  b: 2,
-  e: 'abcd',
-  $or: { c: 3, d: 4 },
-  $$: `'abc'=ANY("ancestors")`,
-  age: {
-    IN: o2sql.select(['age']).from('ua').where({
-      tt: 3,
-    }).ast,
+}
+// "user" "U" LEFT JOIN "group" "G" ON "U"."groupId" = "G"."id" INNER JOIN "company" ON "U"."companyId" = "company"."id"
+```
+```
+{
+  left: {
+    name: 'user',
+    alias: 'U',
   },
+  right: {
+    left: {
+      name: 'group',
+      alias: 'G',
+      key: 'groupKindId',
+    },
+    right: {
+      name: 'groupKind',
+      alias: 'GK',
+      key: 'id',
+    },
+  },
+  join: 'LEFT JOIN',
+  on: 'U.groupId=G.id',
+}
+// "user" "U" LEFT JOIN ("group" "G" INNER JOIN "groupKind" "GK" ON "G"."groupKindId" = "GK"."id") ON "U"."groupId" = "G"."id"
+```
+
+### About where:
+
+#### AND
+```
+{
+  groupId: 3,
+  gender: 'M',
+}
+// groupId=3 AND gender='M'
+```
+
+#### OR
+```
+{
+  $or: {
+    groupId: 3,
+    gender: 'M',
+  }
+}
+// ("groupId" = $2 OR "gender" = $1)
+```
+$1, $2 will be pushed in **values**
+
+#### Other operators
+```
+{
+  name: {
+    "IS NOT": null,
+  },
+  title: {
+    LIKE: '%abc',
+  },
+  age: [22, 23, 24],
   sector: {
     '&&': ['a', 'b', 'c'],
   },
-  $$2: {  // just needs to start with $$.
-    left: o2sql.parse('f(2,3)'),
-    op: '>=',
-    right: o2sql.parse('f(3,4)'),
-  },
-  $$3: {
-    left: 'f1',
-    op: '>=',
-    right: o2sql.parse('f(3,4)'),
-  },
-}).groupby(['a.id', 'b.id'])
-  .orderby(['a.id', '-b.id', ['c.id', 'desc']])
-  .limit(4)
-  .skip(8);
-
-console.log(o2s2.toParams());
+}
+// "name" IS NOT NULL AND "title" like $7 AND "age" IN ($4,$5,$6) AND "sector" && ARRAY[$1,$2,$3]::VARCHAR[]
 ```
-toParams will return the following object, which could be used in node-postgres (https://www.npmjs.com/package/pg) directly.
+Many operators are supported, eg. >=, ILIKE, ...
+
+#### Free mode
 ```
 {
-  sql:
-    `SELECT "U"."id" AS "user_id", "U"."name" AS "user_name", "id", "name", "class" AS "className", convert("a", $1) AS "dt"
-    FROM "user" "U"
-      INNER JOIN "class" "C" ON "U"."classId" = "C"."id"
-      INNER JOIN "grade" "G" ON "U"."gradeId" = "G"."id"
-    WHERE "a" = $17
-      AND "b" = $16
-      AND "e" = $15
-      AND "c" = $14
-      OR "d" = $13
-      AND $12 = ANY("ancestors")
-      AND "age" IN (
-        SELECT "age"
-        FROM "ua"
-        WHERE "tt" = $11
-      )
-      AND "sector" && ARRAY[$8,$9,$10]::VARCHAR[]
-      AND f($6, $7) >= f($4, $5)
-      AND "f1" >= f($2, $3)
-    GROUP BY "a"."id", "b"."id"
-    ORDER BY "a"."id" ASC, "b"."id" DESC, "c"."id" DESC
-    LIMIT $18 OFFSET $19`,
-  values:
-    [101, 3, 4, 3, 4, 2, 3, 'a', 'b', 'c', 3, 'abc', 4, 3, 'abcd', 2, 1, 4, 8]
-};
+  $$: 'id=ANY(1,2,3)',
+  $$2:`(gender='M' OR "groupKind"=3)`,
+  $$3: {
+    left: o2sql.parse('my_function1(field1)'),
+    op: '>=',
+    right: o2sql.parse('my_function2(field2, field3)'),
+  },
+}
+// "id" = ANY($3, $4, $5) AND ("gender" = $2 OR "groupKind" = $1) AND my_function1("field1") >= my_function2("field2", "field3")
+```
+** You just need to give it a key starts with $$.
+
+#### Subquery
+
+```
+{
+  groupId: {
+    IN: o2sql.select(['id']).from('group').where({
+      groupKind: 'a',
+    }),
+  }
+}
+// "groupId" IN (SELECT "id" FROM "group" WHERE "groupKind" = $1)
+```
+
+### groupby
+```
+groupby(['user.groupId', 'user.kind'])
+```
+
+### orderby
+```
+order(['id', '-name', ['gender', 'desc']])
+```
+-name is shor for ['name', 'desc']
+
+### having
+```
+having(having)
+```
+Same as where
+
+### paginate, limit and skip
+```
+pagenate(2, 10)
 ```
 ```
-o2sql.select(['f1', 'f2])
-  .from('tableName')
-  ....
+limit(10).skip(20)
 ```
 
 ## get
 ```
-const o2s = o2sql('get').from('user')
-  .where({
-    id: 1,
-  })
-
-console.log(o2s.toParams());
-o2sql.get(['f1', 'f2])
-  .from('tableName')
+o2sql.get(columns)
+  .from(table)
 ```
+
+get(columns) is short for:
+```
+o2sql('get')
+  .select(columns)
+```
+get is same as select, and it set limit(1) automatically.
+
+## count
+```
+o2sql.count(table)
+  .where(where)
+```
+
+where for count is same as where for select.
 
 ## insert
 ```
-const o2s = o2sql('insert').into('user')
+o2sql.insert(values)
+  .into(table);
+  .returning(columns);
+
+o2sql.insertInto(table)
+  values(values)
+  .returning(columns);
+```
+If values is an Object, it will insert one record. If values is an Array of Object, it will insert multiple records.
+
+Eg.
+```
+o2sql.insertInto('user')
   .values([{
     name: 'Echo',
     age: 34,
@@ -136,28 +288,27 @@ const o2s = o2sql('insert').into('user')
     age: 34,
     likes: 5,
   }])
-  .returning(['id']);
-console.log(o2s.toParams());
-
-o2sql.insert({
-  name: 'Echo',
-  age: 34,
-})
-  .into('user')
-  .returning(['id'])
-  
-o2sql.insertInto('user')
-  .values({
-    name: 'Echo',
-    age: 34,
-  })
-  .returning(['id'])
-
+  .returning(['id', 'name']);
 ```
+```
+  {
+    sql:
+   'INSERT INTO "user" ("name","age","likes") VALUES ($1,$2,(SELECT COUNT(*)::int AS "count" FROM "ul" WHERE "tt" = $3)),($4,$5,$6) RETURNING "id", "name"',
+    values: [ 'Echo', 34, 3, 'Echo', 34, 5 ],
+  }
+```
+
 
 ## update
 ```
-const o2s = o2sql('update').table('user')
+o2sql.update(table)
+  .set(value)
+  .where(where)
+```
+
+Eg.
+```
+o2sql.update('user')
   .set({
     name: 'Echo',
     age: 34,
@@ -169,29 +320,26 @@ const o2s = o2sql('update').table('user')
   .where({
     id: 1,
   });
-
-console.log(o2s.toParams());
-o2sql.update('tableName')
-  .set({
-    name: 'Echo',
-  })
-  ....
 ```
-
+```
+{
+  sql:
+   'UPDATE "user" SET "name"=$1, "age"=$2, "count"="count" + $3, "likes"=(SELECT COUNT(*)::int AS "count" FROM "ul" WHERE "tt" = $4) WHERE "id" = $5',
+  values: [ 'Echo', 34, 1, 3, 1 ],
+}
+```
 ## delete
 ```
-const o2s = o2sql('delete').from('user')
+o2sql.delete('user')
   .where({
     id: 1,
   })
-
-console.log(o2s.toParams());
-o2sql.delete('user').where(...);
 ```
+
 
 ## execute handler (working with pg)
 ```
-// set execute handler when init your app
+// set execute handler when you init your app
 const { Pool } = require('pg')
 const pool = new Pool(config);
 
@@ -204,7 +352,7 @@ o2sql.setOnExecuteHandler(async function({ sql: text, values }, client) {
     } else if (this.isCount) {
       return result.rows[0].count;
     }
-    return result.rows;
+    return result.rows; 
   } else if (this.command === 'insert') {
     return result.rows[0];
   } else if (this.command === 'update') {
