@@ -1,6 +1,6 @@
 {
   "name": "o2sql",
-  "version": "1.0.10",
+  "version": "1.0.12",
   "description": "A tool to generate postgres queries",
   "main": "index.js",
   "scripts": {
@@ -20,6 +20,15 @@
   "files": [
     "lib",
     "index.js"
+  ],
+  "keywords": [
+    "database",
+    "pg",
+    "postgre",
+    "postgres",
+    "postgresql",
+    "osql",
+    "o2sql"
   ],
   "author": "Echo Chen <qdechochen@gmail.com>",
   "license": "ISC"
