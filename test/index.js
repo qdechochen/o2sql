@@ -10,5 +10,9 @@ console.log(o2sql.update('user')
     })
   })
   .where({
+    $or: {
+      id: 1,
+      name: '3',
+    },
     id: 1,
   }).toParams());
