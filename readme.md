@@ -42,10 +42,8 @@ o2sql.select(columns)
   .limit(limit)
   .skip(skip)
 ```
-
-paginate(page, pageSize) is short for:
 ```
-  limit(pageSize).skip(pageSize * (page - 1))
+paginate(page, pageSize)
 ```
 
 ### About columns:
@@ -254,11 +252,16 @@ Same as where
 
 ### paginate, limit and skip
 ```
-pagenate(2, 10)
-```
-```
 limit(10).skip(20)
 ```
+```
+pagenate(page, pageSize)
+```
+is short for:
+```
+limit(pageSize).skip(pageSize * (page - 1))
+```
+
 
 ## get
 ```
@@ -398,12 +401,12 @@ const user = await o2sql.get(['name', 'age'])
 ### execute: with transaction
 Refer to https://node-postgres.com/features/transactions for more about transactions in pg.
 ```
-const { Pool } = require('pg')
-const pool = new Pool()
+const { Pool } = require('pg');
+const pool = new Pool();
 
 (async () => {
   try {
-    await client.query('BEGIN')
+    await client.query('BEGIN');
 
     await o2sql.get(['name', 'age'])
       .from('user')
@@ -417,13 +420,13 @@ const pool = new Pool()
       })
       .execute(client);
 
-    await client.query('COMMIT')
+    await client.query('COMMIT');
   } catch (e) {
-    await client.query('ROLLBACK')
-    throw e
+    await client.query('ROLLBACK');
+    throw e;
   } finally {
-    client.release()
+    client.release();
   }
-})().catch(e => console.error(e.stack))
+})().catch(e => console.error(e.stack));
 
 ```
