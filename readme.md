@@ -80,6 +80,21 @@ Mixed usage is also supported, but you need to make sure every plain field is un
 }]
 ```
 
+### About distinct:
+```
+o2sql.select(['id', 'group'])
+  .from('user)
+  .distinct()
+// select distinct "id", "group" from "user"
+```
+
+```
+o2sql.select(['id', 'group', 'name'])
+  .from('user')
+  .distinct(['id', 'group']);
+// SELECT distinct on ( "id", "group" ) "id", "group", "name" FROM "user"
+```
+
 ### About tables:
 #### Basic (plain)
 ```
