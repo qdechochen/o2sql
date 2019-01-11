@@ -83,7 +83,7 @@ Mixed usage is also supported, but you need to make sure every plain field is un
 ### About distinct:
 ```
 o2sql.select(['id', 'group'])
-  .from('user)
+  .from('user')
   .distinct()
 // select distinct "id", "group" from "user"
 ```
