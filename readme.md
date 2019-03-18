@@ -49,8 +49,8 @@ paginate(page, pageSize)
 ### About columns:
 #### Basic (plain)
 ```
-['id', 'gender', ['name', 'userName']]
-// "id", "gender", "name" AS "userName"
+['id', 'gender', ['name', 'userName'], ['age', 'userAge', 'int], [o2sql.select(['id']).from('anotherTable').where(1), 'subQuery']]
+// "id", "gender", "name" AS "userName", "age"::int AS "userAge", (SELECT "id" FROM "anotherTable" WHERE "id" = $1) AS "subQuery"
 ```
 
 #### Multi table
@@ -270,7 +270,7 @@ Same as where
 limit(10).skip(20)
 ```
 ```
-pagenate(page, pageSize)
+paginate(page, pageSize)
 ```
 is short for:
 ```
