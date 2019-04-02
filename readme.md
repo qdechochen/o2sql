@@ -215,6 +215,9 @@ $1, $2 will be pushed in **values**
   sector: {
     '&&': ['a', 'b', 'c'],
   },
+  stars: {
+    between: [3,5];
+  }
 }
 // "name" IS NOT NULL AND "title" like $7 AND "age" IN ($4,$5,$6) AND "sector" && ARRAY[$1,$2,$3]::VARCHAR[]
 ```
