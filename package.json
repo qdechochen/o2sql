@@ -1,13 +1,12 @@
 {
   "name": "o2sql",
-  "version": "1.0.20",
+  "version": "1.0.23",
   "description": "A tool to generate postgres queries",
   "main": "index.js",
   "scripts": {
     "test": "node ./test/index.js"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "eslint": "^4.15.0",
     "eslint-config-airbnb": "^17.0.0",
