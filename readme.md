@@ -30,6 +30,23 @@ Parse a sql string to ast. You need to make sure the string you pass is part of 
 ```
 o2sql.parse('count + my_func(p1, p2, 4)')
 ```
+o2sql.parse is deprecated and will be removed in future version
+
+
+## identifier / i
+Parse an identifier to ast.
+```
+o2sql.identifier('user.name')
+o2sql.i('user.name')
+o2sql('user.name'); // only when uppercase of identifier is not SELECT, GET, DELETE, UPDATE, COUNT, IDENTIFIER or FUNCTION.
+```
+
+## function / f
+Parse a function to ast. First argument is funciton name, and rest for arguments.
+```
+o2sql.function('func_name', p1);
+o2sql.function('func_name', p1, p2, p3);
+```
 
 ## select
 ```
@@ -49,8 +66,8 @@ paginate(page, pageSize)
 ### About columns:
 #### Basic (plain)
 ```
-['id', 'gender', ['name', 'userName'], ['age', 'userAge', 'int], [o2sql.select(['id']).from('anotherTable').where(1), 'subQuery']]
-// "id", "gender", "name" AS "userName", "age"::int AS "userAge", (SELECT "id" FROM "anotherTable" WHERE "id" = $1) AS "subQuery"
+['id', 'gender', ['name', 'userName'], ['age', 'userAge', 'int'], [o2sql.function('func_name', o2sql.identifier('name'), 2), 'cal_value'], [o2sql.select(['id']).from('anotherTable').where(1), 'subQuery']]
+// "id", "gender", "name" AS "userName", "age"::int AS "userAge", "func_name"("name", $1) AS "cal_value", (SELECT "id" FROM "anotherTable" WHERE "id" = $2) AS "subQuery"
 ```
 
 #### Multi table
@@ -96,16 +113,57 @@ o2sql.select(['id', 'group', 'name'])
 ```
 
 ### About tables:
+o2sql.selct(['id']).from(table)
 #### Basic (plain)
 ```
 'user'
 ```
 #### Join
+##### Chaining style
+o2sql.select(['id])
+  .from(tableA)
+  .join(tableB, on, isMainTable)
+```
+.from('user')
+.join('group', ['groupId', 'id'])
+// FROM "user" INNER JOIN "group" ON "user"."groupId" = "group"."id"
+```
+```
+.from('user')
+.join('group', {
+  'user.groupId': o2sql('group.id'),
+})
+.leftJoin('dept', {
+  'user.kind': 'normal',
+  $$: {
+    left: o2sql('user.gid'),
+    op: '=',
+    right: o2sql('group.id'),
+  },
+})
+.rightJoin('organization', ['orgId', 'id'])
+// FROM "user" INNER JOIN "group" ON "user"."groupId" = "group"."id" LEFT JOIN "dept" ON "user"."kind" = $1 AND "user"."gid" = "group"."id" RIGHT JOIN "organization" ON "user"."orgId" = "organization"."id"
+```
+main table could be set in two ways
+```
+.join('dept', [...], true)
+```
+OR
+```
+.join({
+  name: 'dept',
+  main: true,
+}, [...])
+```
+
+##### Object style
+o2sql.selct(['id']).from(objectStyleTable)
 ```
 {
   left: {
     name: 'user',
     key: 'groupId',
+    main: true, // all fields without table name will be prepended "user".
   },
   right: {
     name: 'group',
@@ -114,6 +172,7 @@ o2sql.select(['id', 'group', 'name'])
 }
 // "user" INNER JOIN "group" ON "user"."groupId"="group"."id"
 ```
+on is a "where" like object.
 ```
 {
   left: {
@@ -125,13 +184,15 @@ o2sql.select(['id', 'group', 'name'])
     alias: 'G',
   },
   join: 'LEFT JOIN',
-  on: 'U.groupId=G.id'
+  on: {
+    'U.groupId': o2sql('G.id'),
+  },
 }
-// "user" "U" LEFT JOIN "group" "G" ON "U"."groupId" = "G"."id"
+// "user" "U" LEFT JOIN "group" "G" ON "U"."groupId" = "G"."id" 
 ```
 ```
 {
-  right: {
+  left: {
     left: {
       name: 'user',
       alias: 'U',
@@ -141,7 +202,14 @@ o2sql.select(['id', 'group', 'name'])
       alias: 'G',
     },
     join: 'LEFT JOIN',
-    on: 'U.groupId=G.id',
+    on: {
+      'U.kind': 'normal',
+      $$: {
+        left: o2sql('U.gid'),
+        op: '=',
+        right: o2sql('G.id'),
+      },
+    },
     key: 'U.companyId',
   },
   right: {
@@ -149,7 +217,7 @@ o2sql.select(['id', 'group', 'name'])
     key: 'id',
   },
 }
-// "user" "U" LEFT JOIN "group" "G" ON "U"."groupId" = "G"."id" INNER JOIN "company" ON "U"."companyId" = "company"."id"
+// "user" "U" LEFT JOIN "group" "G" ON "U"."kind" = $1 AND "U"."gid" = "G"."id" INNER JOIN "company" ON "U"."companyId" = "company"."id"
 ```
 ```
 {
@@ -170,7 +238,9 @@ o2sql.select(['id', 'group', 'name'])
     },
   },
   join: 'LEFT JOIN',
-  on: 'U.groupId=G.id',
+  on: {
+    'U.groupId': o2sql('G.id'),
+  },
 }
 // "user" "U" LEFT JOIN ("group" "G" INNER JOIN "groupKind" "GK" ON "G"."groupKindId" = "GK"."id") ON "U"."groupId" = "G"."id"
 ```
@@ -192,6 +262,7 @@ where(8) is short for where({ id: 8 })
 $1, $2 will be pushed in **values**
 
 #### OR
+Operator starts with $or:
 ```
 {
   $or: {
@@ -200,6 +271,20 @@ $1, $2 will be pushed in **values**
   }
 }
 // ("groupId" = $2 OR "gender" = $1)
+```
+
+```
+{
+  $or1: {
+    groupId: 3,
+    gender: 'M',
+  }
+  $or_sector: {
+    groupId: 4,
+    gender: 'F',
+  }
+}
+// ("groupId" = $4 OR "gender" = $3) AND ("groupId" = $2 OR "gender" = $1)
 ```
 
 #### Other operators
@@ -229,6 +314,11 @@ Many operators are supported, eg. >=, ILIKE, ...
   $$: 'id=ANY(1,2,3)',
   $$2:`(gender='M' OR "groupKind"=3)`,
   $$3: {
+    left: o2sql.f('my_function1', o2sql('field1')),
+    op: '>=',
+    right: o2sql('field2'),
+  },
+  $$4: {
     left: o2sql.parse('my_function1(field1)'),
     op: '>=',
     right: o2sql.parse('my_function2(field2, field3)'),
@@ -251,9 +341,32 @@ Many operators are supported, eg. >=, ILIKE, ...
 // "groupId" IN (SELECT "id" FROM "group" WHERE "groupKind" = $1)
 ```
 
+```
+o2sql.select(['id', 'name']).from({
+  left: {
+    name: o2sql
+      .select(['id', 'name', 'deptId'])
+      .from('dept')
+      .where({ orgId: 5 }),
+    key: 'id',
+    alias: 'myDept',
+  },
+  right: {
+    name: 'user',
+    key: 'deptId',
+  }
+});
+// SELECT "id", "name" FROM (SELECT "id", "name", "deptId" FROM "dept" WHERE "orgId" = $1) "myDept" INNER JOIN "user" ON "myDept"."id" = "user"."deptId"
+```
+
 ### groupby
 ```
 groupby(['user.groupId', 'user.kind'])
+```
+```
+// If you set main table to user
+groupby(['groupId', '.random'])
+// group by "user"."groupId", "random"
 ```
 
 ### orderby
@@ -261,6 +374,14 @@ groupby(['user.groupId', 'user.kind'])
 order(['id', '-name', ['gender', 'desc']])
 ```
 -name is shor for ['name', 'desc']
+
+```
+// If you set main table to user
+orderby(['groupId', '.random'])
+// order by "user"."groupId", "random"
+// This is very useful when you have computed field like [o2sql.parse('random()'), 'random']
+```
+
 
 ### having
 ```
@@ -280,6 +401,20 @@ is short for:
 limit(pageSize).skip(pageSize * (page - 1))
 ```
 
+### union
+```
+o2sql
+  .select(['id', 'name'])
+  .from('dept1')
+  .where({ orgId: 5 })
+  .union(
+    o2sql
+      .select(['id', 'name'])
+      .from('dept2')
+      .where({ orgId: 3 })
+  );
+// SELECT "id", "name" FROM "dept1" WHERE "orgId" = $1 UNION SELECT "id", "name" FROM "dept2" WHERE "orgId" = $2
+```
 
 ## get
 ```
