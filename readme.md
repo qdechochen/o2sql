@@ -299,12 +299,16 @@ Operator starts with $or:
   age: [22, 23, 24],
   sector: {
     '&&': ['a', 'b', 'c'],
+    '@>': ['a', 'b'],
+  },
+  groupId: {
+    '&&': [1, 2, 3],
   },
   stars: {
     between: [3,5];
   }
 }
-// "name" IS NOT NULL AND "title" like $7 AND "age" IN ($4,$5,$6) AND "sector" && ARRAY[$1,$2,$3]::VARCHAR[]
+// "name" IS NOT NULL AND "title" LIKE $18 AND "age" IN ($15,$16,$17) AND "sector" && ARRAY[$12,$13,$14]::VARCHAR[] AND "sector" @> ARRAY[$10,$11]::VARCHAR[] AND "groupId" && ARRAY[$7,$8,$9]::INTEGER[] AND "stars" BETWEEN $2 AND $3
 ```
 Many operators are supported, eg. >=, ILIKE, ...
 
@@ -431,11 +435,44 @@ get is same as select, and it set limit(1) automatically.
 
 ## count
 ```
-o2sql.count(table)
+o2sql.count(table)  // table should be a string or object, same as from of 'select'
   .where(where)
+  .distinct()
+```
+```
+o2sql.count(columns)  // colmns should be an array
+  .from(from)
+  .distinct()
+```
+```
+o2sql
+  .count('user')
+  .where({
+    groupd: 1,
+  })
+// SELECT count( * )::INTEGER AS count FROM "user" WHERE "groupd" = $1
+```
+```
+o2sql
+  .count(['companyId'])
+  .from('user')
+  .where({
+    groupd: 1,
+  })
+  .distinct();
+// OR
+o2sql
+  .count('user')
+  .select(['companyId'])
+  .where({
+    groupd: 1,
+  })
+  .distinct();
+// SELECT count( distinct "companyId" )::INTEGER AS count FROM "user" WHERE "groupd" = $1
 ```
 
 where for count is same as where for select.
+join, leftJoin, rightJoin is also supported.
 
 ## insert
 ```

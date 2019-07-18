@@ -1,5 +1,19 @@
 # CHANGE LOG
 
+## v2.0.4
+1. added: 'distinct' and select support to 'count'
+
+
+## v2.0.3
+1. &&, @>, <@ now support array with integer items
+
+## v2.0.2
+1. added '@>', '<@' support
+
+
+## v2.0.1
+1. WHERE: when value is null, =/<> will be parsed to IS/IS NOT
+
 ## v2.0.0
 1. added indentifier support
 2. added function support
