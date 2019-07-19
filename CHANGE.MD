@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## v2.0.5
+1. fixed: count not working in update set
+
+
 ## v2.0.4
 1. added: 'distinct' and select support to 'count'
 
