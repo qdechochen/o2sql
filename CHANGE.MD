@@ -1,36 +1,50 @@
 # CHANGE LOG
 
+##v2.0.7
+
+1. fixed: from now support subquery(o2sql.select())
+
+## v2.0.6
+
+1. fixed: join not working in count
+
 ## v2.0.5
+
 1. fixed: count not working in update set
 
-
 ## v2.0.4
+
 1. added: 'distinct' and select support to 'count'
 
-
 ## v2.0.3
+
 1. &&, @>, <@ now support array with integer items
 
 ## v2.0.2
+
 1. added '@>', '<@' support
 
-
 ## v2.0.1
+
 1. WHERE: when value is null, =/<> will be parsed to IS/IS NOT
 
 ## v2.0.0
+
 1. added indentifier support
 2. added function support
 3. added chaining .join() support
 4. added where like object support to "on"
 
 ## v1.0.27
+
 1. added 'union' support
 2. added sub query support in 'from'
 3. sub query now has its own mainTable.
 
 ## v1.0.26
-1. new feature: support multiple $or
+
+1. new feature: support multiple \$or
+
 ```
 ...
 .where({
@@ -45,14 +59,14 @@
 })
 ...
 ```
+
 ```
 WHERE (a = $4 OR b = $3) AND (c = $2 and d = $1)
 ```
 
-
 ## v1.0.22
-1. fixed bug: mainTable not resolved in count()
 
+1. fixed bug: mainTable not resolved in count()
 
 ## v1.0.21
 
