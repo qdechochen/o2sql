@@ -3,6 +3,7 @@
 A very simple tool to help generate postgres queries. "" will be added to table/field names.
 
 .toParams() will retun the following object, which could be used in node-postgres (https://www.npmjs.com/package/pg) directly.
+
 ```
 {
   sql: '....',
@@ -11,12 +12,14 @@ A very simple tool to help generate postgres queries. "" will be added to table/
 ```
 
 ## toParams
+
 ```
 o2sql.select(['id', 'name'])
   .from('user')
   .where(4)
   .toParams();
 ```
+
 ```
 {
   sql: 'select "id", "name" from "user" where "id" = $1',
@@ -24,17 +27,10 @@ o2sql.select(['id', 'name'])
 }
 ```
 
-
-## parse
-Parse a sql string to ast. You need to make sure the string you pass is part of standard sql.
-```
-o2sql.parse('count + my_func(p1, p2, 4)')
-```
-o2sql.parse is deprecated and will be removed in future version
-
-
 ## identifier / i
+
 Parse an identifier to ast.
+
 ```
 o2sql.identifier('user.name')
 o2sql.i('user.name')
@@ -42,13 +38,16 @@ o2sql('user.name'); // only when uppercase of identifier is not SELECT, GET, DEL
 ```
 
 ## function / f
+
 Parse a function to ast. First argument is funciton name, and rest for arguments.
+
 ```
 o2sql.function('func_name', p1);
 o2sql.function('func_name', p1, p2, p3);
 ```
 
 ## select
+
 ```
 o2sql.select(columns)
   .from(table)
@@ -59,18 +58,22 @@ o2sql.select(columns)
   .limit(limit)
   .skip(skip)
 ```
+
 ```
 paginate(page, pageSize)
 ```
 
 ### About columns:
+
 #### Basic (plain)
+
 ```
 ['id', 'gender', ['name', 'userName'], ['age', 'userAge', 'int'], [o2sql.function('func_name', o2sql.identifier('name'), 2), 'cal_value'], [o2sql.select(['id']).from('anotherTable').where(1), 'subQuery']]
 // "id", "gender", "name" AS "userName", "age"::int AS "userAge", "func_name"("name", $1) AS "cal_value", (SELECT "id" FROM "anotherTable" WHERE "id" = $2) AS "subQuery"
 ```
 
 #### Multi table
+
 ```
 [{
   table: 'user',
@@ -88,7 +91,9 @@ paginate(page, pageSize)
 //
 "id", "name", "gender", "groupId", "groupName", "groupKind", "company_id", "company_name"
 ```
+
 Mixed usage is also supported, but you need to make sure every plain field is unique.
+
 ```
 ['firstName', 'lastName', {
   table: 'group',
@@ -98,6 +103,7 @@ Mixed usage is also supported, but you need to make sure every plain field is un
 ```
 
 ### About distinct:
+
 ```
 o2sql.select(['id', 'group'])
   .from('user')
@@ -113,21 +119,29 @@ o2sql.select(['id', 'group', 'name'])
 ```
 
 ### About tables:
+
 o2sql.selct(['id']).from(table)
+
 #### Basic (plain)
+
 ```
 'user'
 ```
+
 #### Join
+
 ##### Chaining style
+
 o2sql.select(['id])
-  .from(tableA)
-  .join(tableB, on, isMainTable)
+.from(tableA)
+.join(tableB, on, isMainTable)
+
 ```
 .from('user')
 .join('group', ['groupId', 'id'])
 // FROM "user" INNER JOIN "group" ON "user"."groupId" = "group"."id"
 ```
+
 ```
 .from('user')
 .join('group', {
@@ -144,11 +158,15 @@ o2sql.select(['id])
 .rightJoin('organization', ['orgId', 'id'])
 // FROM "user" INNER JOIN "group" ON "user"."groupId" = "group"."id" LEFT JOIN "dept" ON "user"."kind" = $1 AND "user"."gid" = "group"."id" RIGHT JOIN "organization" ON "user"."orgId" = "organization"."id"
 ```
+
 main table could be set in two ways
+
 ```
 .join('dept', [...], true)
 ```
+
 OR
+
 ```
 .join({
   name: 'dept',
@@ -157,7 +175,9 @@ OR
 ```
 
 ##### Object style
+
 o2sql.selct(['id']).from(objectStyleTable)
+
 ```
 {
   left: {
@@ -172,7 +192,9 @@ o2sql.selct(['id']).from(objectStyleTable)
 }
 // "user" INNER JOIN "group" ON "user"."groupId"="group"."id"
 ```
+
 on is a "where" like object.
+
 ```
 {
   left: {
@@ -188,8 +210,9 @@ on is a "where" like object.
     'U.groupId': o2sql('G.id'),
   },
 }
-// "user" "U" LEFT JOIN "group" "G" ON "U"."groupId" = "G"."id" 
+// "user" "U" LEFT JOIN "group" "G" ON "U"."groupId" = "G"."id"
 ```
+
 ```
 {
   left: {
@@ -219,6 +242,7 @@ on is a "where" like object.
 }
 // "user" "U" LEFT JOIN "group" "G" ON "U"."kind" = $1 AND "U"."gid" = "G"."id" INNER JOIN "company" ON "U"."companyId" = "company"."id"
 ```
+
 ```
 {
   left: {
@@ -248,10 +272,11 @@ on is a "where" like object.
 ### About where:
 
 #### Number/String
+
 where(8) is short for where({ id: 8 })
 
-
 #### AND
+
 ```
 {
   groupId: 3,
@@ -259,10 +284,13 @@ where(8) is short for where({ id: 8 })
 }
 // "groupId" = $2 AND "gender" = $1
 ```
+
 $1, $2 will be pushed in **values**
 
 #### OR
-Operator starts with $or:
+
+Operator starts with \$or:
+
 ```
 {
   $or: {
@@ -288,6 +316,7 @@ Operator starts with $or:
 ```
 
 #### Other operators
+
 ```
 {
   name: {
@@ -310,9 +339,11 @@ Operator starts with $or:
 }
 // "name" IS NOT NULL AND "title" LIKE $18 AND "age" IN ($15,$16,$17) AND "sector" && ARRAY[$12,$13,$14]::VARCHAR[] AND "sector" @> ARRAY[$10,$11]::VARCHAR[] AND "groupId" && ARRAY[$7,$8,$9]::INTEGER[] AND "stars" BETWEEN $2 AND $3
 ```
+
 Many operators are supported, eg. >=, ILIKE, ...
 
 #### Free mode
+
 ```
 {
   $$: 'id=ANY(1,2,3)',
@@ -330,7 +361,8 @@ Many operators are supported, eg. >=, ILIKE, ...
 }
 // "id" = ANY($3, $4, $5) AND ("gender" = $2 OR "groupKind" = $1) AND my_function1("field1") >= my_function2("field2", "field3")
 ```
-** You just need to give it a key starts with $$.
+
+\*\* You just need to give it a key starts with \$\$.
 
 #### Subquery
 
@@ -364,9 +396,11 @@ o2sql.select(['id', 'name']).from({
 ```
 
 ### groupby
+
 ```
 groupby(['user.groupId', 'user.kind'])
 ```
+
 ```
 // If you set main table to user
 groupby(['groupId', '.random'])
@@ -374,9 +408,11 @@ groupby(['groupId', '.random'])
 ```
 
 ### orderby
+
 ```
 order(['id', '-name', ['gender', 'desc']])
 ```
+
 -name is shor for ['name', 'desc']
 
 ```
@@ -386,26 +422,32 @@ orderby(['groupId', '.random'])
 // This is very useful when you have computed field like [o2sql.parse('random()'), 'random']
 ```
 
-
 ### having
+
 ```
 having(having)
 ```
+
 Same as where
 
 ### paginate, limit and skip
+
 ```
 limit(10).skip(20)
 ```
+
 ```
 paginate(page, pageSize)
 ```
+
 is short for:
+
 ```
 limit(pageSize).skip(pageSize * (page - 1))
 ```
 
 ### union
+
 ```
 o2sql
   .select(['id', 'name'])
@@ -421,29 +463,35 @@ o2sql
 ```
 
 ## get
+
 ```
 o2sql.get(columns)
   .from(table)
 ```
 
 get(columns) is short for:
+
 ```
 o2sql('get')
   .select(columns)
 ```
+
 get is same as select, and it set limit(1) automatically.
 
 ## count
+
 ```
 o2sql.count(table)  // table should be a string or object, same as from of 'select'
   .where(where)
   .distinct()
 ```
+
 ```
 o2sql.count(columns)  // colmns should be an array
   .from(from)
   .distinct()
 ```
+
 ```
 o2sql
   .count('user')
@@ -452,6 +500,7 @@ o2sql
   })
 // SELECT count( * )::INTEGER AS count FROM "user" WHERE "groupd" = $1
 ```
+
 ```
 o2sql
   .count(['companyId'])
@@ -475,6 +524,7 @@ where for count is same as where for select.
 join, leftJoin, rightJoin is also supported.
 
 ## insert
+
 ```
 o2sql.insert(values)
   .into(table);
@@ -484,9 +534,11 @@ o2sql.insertInto(table)
   values(values)
   .returning(columns);
 ```
+
 If values is an Object, it will insert one record. If values is an Array of Object, it will insert multiple records.
 
 Eg.
+
 ```
 o2sql.insertInto('user')
   .values([{
@@ -502,6 +554,7 @@ o2sql.insertInto('user')
   }])
   .returning(['id', 'name']);
 ```
+
 ```
   {
     sql:
@@ -510,8 +563,8 @@ o2sql.insertInto('user')
   }
 ```
 
-
 ## update
+
 ```
 o2sql.update(table)
   .set(value)
@@ -519,6 +572,7 @@ o2sql.update(table)
 ```
 
 Eg.
+
 ```
 o2sql.update('user')
   .set({
@@ -533,6 +587,7 @@ o2sql.update('user')
     id: 1,
   });
 ```
+
 ```
 {
   sql:
@@ -540,7 +595,9 @@ o2sql.update('user')
   values: [ 'Echo', 34, 1, 3, 1 ],
 }
 ```
+
 ## delete
+
 ```
 o2sql.delete('user').where(2)
 
@@ -549,10 +606,11 @@ o2sql.delete('user')
     id: 1,
   })
 ```
+
 where is required for delete, in case you delete all records.
 
-
 ## execute handler (working with pg)
+
 ```
 // set execute handler when you init your app
 const { Pool } = require('pg')
@@ -567,7 +625,7 @@ o2sql.setOnExecuteHandler(async function({ sql: text, values }, client) {
     } else if (this.isCount) {
       return result.rows[0].count;
     }
-    return result.rows; 
+    return result.rows;
   } else if (this.command === 'insert') {
     return result.rows[0];
   } else if (this.command === 'update') {
@@ -577,7 +635,9 @@ o2sql.setOnExecuteHandler(async function({ sql: text, values }, client) {
   }
 });
 ```
+
 ### execute: query
+
 ```
 const user = await o2sql.get(['name', 'age'])
   .from('user')
@@ -589,7 +649,9 @@ const user = await o2sql.get(['name', 'age'])
 ```
 
 ### execute: with transaction
+
 Refer to https://node-postgres.com/features/transactions for more about transactions in pg.
+
 ```
 const { Pool } = require('pg');
 const pool = new Pool();

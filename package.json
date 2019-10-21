@@ -4,7 +4,8 @@
   "description": "A tool to generate postgres queries",
   "main": "index.js",
   "scripts": {
-    "test": "node ./test/index.js"
+    "test": "node ./test/index.js",
+    "debug": "node --inspect ./test/index.js"
   },
   "dependencies": {},
   "devDependencies": {
