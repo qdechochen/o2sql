@@ -2,16 +2,15 @@
   "name": "o2sql",
   "version": "3.0.0",
   "description": "A tool to generate postgres queries",
-  "main": "index.js",
+  "main": "lib/o2sql.js",
   "scripts": {
     "test": "node ./test/index.js",
     "debug": "node --inspect ./test/index.js"
   },
   "dependencies": {},
   "devDependencies": {
-    "eslint": "^4.15.0",
-    "eslint-config-airbnb": "^17.0.0",
-    "eslint-plugin-import": "^2.13.0"
+    "eslint": "^5.16.0",
+    "eslint-config-egg": "^7.4.1"
   },
   "repository": {
     "type": "git",
