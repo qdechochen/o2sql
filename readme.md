@@ -11,6 +11,8 @@ A very simple tool to help generate postgres queries. "" will be added to table/
 }
 ```
 
+- This READ is still ONLY for v2. v3 has some small changes, and manual will be avaiable later. \*
+
 ## toParams
 
 ```
@@ -34,7 +36,6 @@ Parse an identifier to ast.
 ```
 o2sql.identifier('user.name')
 o2sql.i('user.name')
-o2sql('user.name'); // only when uppercase of identifier is not SELECT, GET, DELETE, UPDATE, COUNT, IDENTIFIER or FUNCTION.
 ```
 
 ## function / f
