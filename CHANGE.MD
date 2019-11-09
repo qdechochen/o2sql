@@ -1,6 +1,11 @@
 # CHANGE LOG
 
-##v3.0.0 beta
+## v3.0.2
+
+1. added: returning support to _delete_
+
+## v3.0.0 beta
+
 Refactored all code
 
 ##v2.0.7
