@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## v3.0.3
+
+1. new: ignore limit when < 1.
+
 ## v3.0.2
 
 1. added: returning support to _delete_

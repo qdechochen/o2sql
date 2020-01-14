@@ -44,7 +44,7 @@ Parse a function to ast. First argument is funciton name, and rest for arguments
 
 ```
 o2sql.function('func_name', p1);
-o2sql.function('func_name', p1, p2, p3);
+o2sql.f('func_name', p1, p2, p3);
 ```
 
 ## select
@@ -290,28 +290,32 @@ $1, $2 will be pushed in **values**
 
 #### OR
 
-Operator starts with \$or:
+1. Any key starts with \$ will be ignored, and its value will be treated seperately;
+2. OR wil be used if the key is ignored, and its value is an array.
 
 ```
 {
-  $or: {
-    groupId: 3,
-    gender: 'M',
-  }
+  $or: [{
+      groupId: 3,
+    }, {
+      gender: 'M',
+    }],
 }
 // ("groupId" = $2 OR "gender" = $1)
 ```
 
 ```
 {
-  $or1: {
-    groupId: 3,
-    gender: 'M',
-  }
-  $or_sector: {
-    groupId: 4,
-    gender: 'F',
-  }
+  $or1: [{
+      groupId: 3,
+    }, {
+      gender: 'M',
+    }],
+  $or2: [{
+      groupId: 4,
+    }, {
+      gender: 'F',
+    }],
 }
 // ("groupId" = $4 OR "gender" = $3) AND ("groupId" = $2 OR "gender" = $1)
 ```
@@ -347,17 +351,10 @@ Many operators are supported, eg. >=, ILIKE, ...
 
 ```
 {
-  $$: 'id=ANY(1,2,3)',
-  $$2:`(gender='M' OR "groupKind"=3)`,
-  $$3: {
-    left: o2sql.f('my_function1', o2sql('field1')),
-    op: '>=',
-    right: o2sql('field2'),
-  },
-  $$4: {
-    left: o2sql.parse('my_function1(field1)'),
-    op: '>=',
-    right: o2sql.parse('my_function2(field2, field3)'),
+  $1: {
+    $left: o2sql.f('my_function1', o2sql.i('field1')),
+    $op: '>=',
+    $right: o2sql.i('field2'),
   },
 }
 // "id" = ANY($3, $4, $5) AND ("gender" = $2 OR "groupKind" = $1) AND my_function1("field1") >= my_function2("field2", "field3")
@@ -420,7 +417,7 @@ order(['id', '-name', ['gender', 'desc']])
 // If you set main table to user
 orderby(['groupId', '.random'])
 // order by "user"."groupId", "random"
-// This is very useful when you have computed field like [o2sql.parse('random()'), 'random']
+// This is very useful when you have computed field like [o2sql.f('random'), 'random']
 ```
 
 ### having
@@ -579,7 +576,7 @@ o2sql.update('user')
   .set({
     name: 'Echo',
     age: 34,
-    count: o2sql.parse('"count" + 1'),
+    count: o2sql.expr(o2sql.i('count'), '+', 1),
     likes: o2sql.count('ul').where({
       tt: 3,
     })
