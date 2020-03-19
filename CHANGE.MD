@@ -1,5 +1,10 @@
 # CHANGE LOG
 
+## v3.0.5
+
+1. bug fixes
+2. v3 doc
+
 ## v3.0.3
 
 1. new: ignore limit when < 1.

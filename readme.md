@@ -276,7 +276,7 @@ o2sql.select(columns:array)
   .having(having:object)
   .limit(limit:number)
   .skip(skip:number)
-	.union(union:Select)
+  .union(union:Select)
 ```
 
 ```typescript
@@ -289,8 +289,6 @@ paginate(page:number, pageSize:number)
 ```javascript
 o2sql.select(columns:array):Select
 ```
-
-
 
 #### Basic
 
@@ -325,14 +323,14 @@ o2sql.select(['id', ['age', 'userAge', 'int']]).toParams();
 
 ```javascript
 o2sql.select([
-	[o2sql.f('foo', o2sql.i('col1'), o2sql.i('col2'), 5), 'total'],
-	[o2sql.e(o2sql.i('col3'), '+', '_append_string'), 'appendedString', 'string'],
+  [o2sql.f('foo', o2sql.i('col1'), o2sql.i('col2'), 5), 'total'],
+  [o2sql.e(o2sql.i('col3'), '+', '_append_string'), 'appendedString', 'string'],
 ])
   .toParams();
 
 {
-	sql: 'SELECT "foo"("col1","col2",$1) "total",CAST("col3" + $2 AS VARCHAR) "appendedString"',
-	values: [ 5, '_append_string' ]
+  sql: 'SELECT "foo"("col1","col2",$1) "total",CAST("col3" + $2 AS VARCHAR) "appendedString"',
+  values: [ 5, '_append_string' ]
 }
 ```
 
@@ -340,7 +338,7 @@ o2sql.select([
 
 ```javascript
 o2sql.select([
-	[o2sql.select(['name']).from('group').where({id: o2sql.i('user.groupId')}), 'groupName']
+  [o2sql.select(['name']).from('group').where({id: o2sql.i('user.groupId')}), 'groupName']
 ])
   .from('user')
   .toParams();
@@ -373,8 +371,8 @@ o2sql.select([
 ]).toParams();
 
 {
-	sql: 'SELECT "user"."id" "userId","user"."name" "userName","user"."gender" "userGender","group"."id" "groupId","group"."name" "groupName","category" "groupKind","company"."id" "company_id","company"."name" "company_name"',
-	values: []
+  sql: 'SELECT "user"."id" "userId","user"."name" "userName","user"."gender" "userGender","group"."id" "groupId","group"."name" "groupName","category" "groupKind","company"."id" "company_id","company"."name" "company_name"',
+  values: []
 }
 
 ```
@@ -434,30 +432,26 @@ o2sql.select(['id', 'name', 'groupId'])
 Select.from(table:string|array|TableAst|object):Select
 ```
 
-
-
 See [table / t](##table / t) for param details.
 
 ```javascript
 o2sql.select(['id'])
-	.from(o2sql.t('user'))
-	.toParams();
+  .from(o2sql.t('user'))
+  .toParams();
 
 { sql: 'SELECT "id" FROM "user"', values: [] }
 ```
 
 ```javascript
 o2sql.select(['id'])
-	.from(o2sql.t('user').innerJoin('dept', ['user.deptId', 'dept.id']))
-	.toParams();
+  .from(o2sql.t('user').innerJoin('dept', ['user.deptId', 'dept.id']))
+  .toParams();
 
 {
   sql: 'SELECT "id" FROM "user" INNER JOIN "dept" ON "user"."deptId" = "dept"."id"',
   values: []
 }
 ```
-
-
 
 ### join
 
@@ -477,25 +471,23 @@ Select.crossJoin(table:string|array|tableAst|object,on:array|object):Select
 
   ```javascript
   o2sql.select(['id'])
-  	.from('user')
-  	.innerJoin(
-    	o2sql.table('dept')
-    		.innerJoin(
+    .from('user')
+    .innerJoin(
+      o2sql.table('dept')
+        .innerJoin(
           'org',
           ['dept.orgId','org.id']
-       	),
-    	['user.deptId', 'dept.id']
-  	).toParams();
-  
+         ),
+      ['user.deptId', 'dept.id']
+    ).toParams();
+
   {
     sql: 'SELECT "id" FROM "user" INNER JOIN ("dept" INNER JOIN "org" ON "dept"."orgId" = "org"."id" ON "user"."deptId" = "dept"."id")',
     values: []
   }
   ```
 
-  
-
-- ##### on:array
+* ##### on:array
 
 ```javascript
 o2sql.select(['id'])
@@ -547,15 +539,11 @@ o2sql
 }
 ```
 
-
-
 ### where:
 
 ```javascript
 where(where:string|number|array|object):Select
 ```
-
-
 
 #### Number/String
 
@@ -580,15 +568,15 @@ o2sql.select(['id']).from('user').where(1).toParams();
 
 ```javascript
 o2sql.select(['id'])
-	.from('user')
-	.where({
+  .from('user')
+  .where({
     groupId: 3,
     gender: 'M',
   })
   .toParams();
-  
+
 {
-	sql: 'SELECT "id" FROM "user" WHERE "groupId" = $1 AND "gender" = $2',
+  sql: 'SELECT "id" FROM "user" WHERE "groupId" = $1 AND "gender" = $2',
   values: [ 3, 'M' ]
 }
 ```
@@ -599,8 +587,8 @@ o2sql.select(['id'])
 
   ```javascript
   o2sql.select(['id'])
-  	.from('user')
-  	.where([
+    .from('user')
+    .where([
       {
         groupId: 3
       },
@@ -608,7 +596,7 @@ o2sql.select(['id'])
         groupId: 4
       }
     ]).toParams();
-  
+
   {
     sql: 'SELECT "id" FROM "user" WHERE "groupId" = $1 OR "groupId" = $2',
     values: [ 3, 4 ]
@@ -617,13 +605,13 @@ o2sql.select(['id'])
 
 - **OR in AND**
 
-  - If the name of an attribute startsWith '$' and value is an array (this feature will be removed in the next main version).
+  - If the name of an attribute startsWith '\$' and value is an array (this feature will be removed in the next main version).
   - OR the name of an attribute is a Symbol and value is an array.
 
   ```javascript
   o2sql.select(['id'])
-  	.from('user')
-  	.where({
+    .from('user')
+    .where({
       gender: 'M',
       [Symbol()]:[
         {
@@ -635,45 +623,43 @@ o2sql.select(['id'])
         }
       ]
     }).toParams();
-  
+
   {
-  	sql: 'SELECT "id" FROM "user" WHERE "gender" = $1 AND ("groupId" = $2 OR "groupId" = $3 AND "rank" = $4)',
+    sql: 'SELECT "id" FROM "user" WHERE "gender" = $1 AND ("groupId" = $2 OR "groupId" = $3 AND "rank" = $4)',
     values: [ 'M', 3, 4 ]
   }
   ```
-
-
 
 #### Other operators
 
 ```javascript
 o2sql.select(['id'])
-	.from('user')
-	.where({
+  .from('user')
+  .where({
     groupId: 3,
     gender: 'M',
-  	vip: false,
-	  address: {
+    vip: false,
+    address: {
       '<>': null,
     },
-  	grade: null,
-  	age: {
+    grade: null,
+    age: {
       '>=': 18,
       '<': 60
     },
-  	role: ['user', 'admin'],
-  	name: {
+    role: ['user', 'admin'],
+    name: {
       ILIKE: '%Mia%'
     },
-  	sectors: {
+    sectors: {
       '&&': ['a', 'b', 'c'],
       '@>': ['a', 'b'],
     }
   })
   .toParams();
-  
+
 {
-	sql: 'SELECT "id" FROM "user" WHERE "groupId" = $1 AND "gender" = $2 AND "vip" = $3 AND "address" IS NOT NULL AND "grade" IS NULL AND "age" >= $4 AND "age" < $5 AND "role"=ANY(ARRAY[$6,$7]::VARCHAR[]) AND "name" ILIKE $8 AND "sectors" && ARRAY[$9,$10,$11]::VARCHAR[] AND "sectors" @> ARRAY[$12,$13]::VARCHAR[]',
+  sql: 'SELECT "id" FROM "user" WHERE "groupId" = $1 AND "gender" = $2 AND "vip" = $3 AND "address" IS NOT NULL AND "grade" IS NULL AND "age" >= $4 AND "age" < $5 AND "role"=ANY(ARRAY[$6,$7]::VARCHAR[]) AND "name" ILIKE $8 AND "sectors" && ARRAY[$9,$10,$11]::VARCHAR[] AND "sectors" @> ARRAY[$12,$13]::VARCHAR[]',
   values:
    [ 3,
      'M',
@@ -692,20 +678,19 @@ o2sql.select(['id'])
 
 ```
 
-
 #### Subquery
 
 ```javascript
 o2sql.select(['id', 'name'])
-	.from('user')
-	.where({
+  .from('user')
+  .where({
     groupId: {
-    	IN: o2sql.select(['id']).from('group').where({
+      IN: o2sql.select(['id']).from('group').where({
         groupKind: 'a',
       }),
-		}
-	})
-	.toParams();
+    }
+  })
+  .toParams();
 
 {
   sql: 'SELECT "id","name" FROM "user" WHERE "groupId"=ANY(SELECT "id" FROM "group" WHERE "groupKind" = $1)',
@@ -713,23 +698,22 @@ o2sql.select(['id', 'name'])
 }
 ```
 
-
 #### Free mode
 
 ```javascript
 o2sql.select(['id'])
-	.from('user')
-	.where({
-		[Symbol()]: {
- 			$left: o2sql.f('foo'),
-			$op: '>=',
-  		$right: o2sql.i('age'),
-		},
-	})
-	.toParams();
-	
+  .from('user')
+  .where({
+    [Symbol()]: {
+       $left: o2sql.f('foo'),
+      $op: '>=',
+      $right: o2sql.i('age'),
+    },
+  })
+  .toParams();
+
 {
-	sql: 'SELECT "id" FROM "user" WHERE "foo"() >= "age"',
+  sql: 'SELECT "id" FROM "user" WHERE "foo"() >= "age"',
   values: []
 }
 ```
@@ -739,15 +723,13 @@ o2sql
   .select(['id'])
   .from('user')
   .where(o2sql.e(o2sql.i('age'), '>', 18))
-	.toParams();
-	
+  .toParams();
+
 {
-	sql: 'SELECT "id" FROM "user" WHERE "age" > $1',
+  sql: 'SELECT "id" FROM "user" WHERE "age" > $1',
   values: [18]
 }
 ```
-
-
 
 ### groupby
 
@@ -757,13 +739,13 @@ groupby(groupby:string|array):Select
 
 ```javascript
 o2sql.select(['role', [o2sql.f('count', o2sql.i('id')), 'count']])
-	.from('user')
-	.groupby(['role'])
-	// .groupby('role')
-	.toParams();
+  .from('user')
+  .groupby(['role'])
+  // .groupby('role')
+  .toParams();
 
 {
-	sql: 'SELECT "role","count"("id") "count" FROM "user" GROUP BY "role"',
+  sql: 'SELECT "role","count"("id") "count" FROM "user" GROUP BY "role"',
   values: []
 }
 ```
@@ -776,14 +758,14 @@ orderby(order:string|array):Select
 
 ```javascript
 o2sql.select(['id', 'name'])
-	.from('user')
-	.orderby(['id', '-name'])
-	// .orderby(['id', ['name', 'DESC']])
-	// .orderby('id')
-	.toParams();
+  .from('user')
+  .orderby(['id', '-name'])
+  // .orderby(['id', ['name', 'DESC']])
+  // .orderby('id')
+  .toParams();
 
 {
-	sql: 'SELECT "id","name" FROM "user" ORDER BY "id" ASC,"name" DESC',
+  sql: 'SELECT "id","name" FROM "user" ORDER BY "id" ASC,"name" DESC',
   values: []
 }
 ```
@@ -811,7 +793,7 @@ o2sql
   .select(['id', 'name'])
   .from('user')
   .paginate(2, 10)
-	.toParams();
+  .toParams();
 
 {
   sql: 'SELECT "id","name" FROM "user" LIMIT $1 OFFSET $2',
@@ -833,9 +815,9 @@ o2sql
     .where({ orgId: 3 })
   )
   .toParams();
-  
+
 {
-	sql: 'SELECT "id","name" FROM "dept1" WHERE "orgId" = $1 UNION ALL SELECT "id","name" FROM "dept2" WHERE "orgId" = $2',
+  sql: 'SELECT "id","name" FROM "dept1" WHERE "orgId" = $1 UNION ALL SELECT "id","name" FROM "dept2" WHERE "orgId" = $2',
   values: [ 5, 3 ]
 }
 ```
@@ -857,11 +839,11 @@ Get inherits from Select, and set limit(1) automatically. There's no limit and u
 
 ```javascript
 o2sql.get(['id', 'name'])
-	.from('user')
-	.toParams();
-	
+  .from('user')
+  .toParams();
+
 {
-	sql: 'SELECT "id","name" FROM "user" LIMIT $1',
+  sql: 'SELECT "id","name" FROM "user" LIMIT $1',
   values: [ 1 ]
 }
 ```
@@ -869,14 +851,15 @@ o2sql.get(['id', 'name'])
 ## Count
 
 ```javascript
-o2sql.count(table:string).where(where:object)
-o2sql.count(columns:array)
-  .distinct(distinct:string|array)
-  .from(table:string|object)
-  .where(where:object)
-  .groupby(groupby:string|array)
-  .orderby(orderby:string|array)
-  .having(having:object)
+o2sql.count((table: string)).where((where: object));
+o2sql
+  .count((columns: array))
+  .distinct((distinct: string | array))
+  .from((table: string | object))
+  .where((where: object))
+  .groupby((groupby: string | array))
+  .orderby((orderby: string | array))
+  .having((having: object));
 ```
 
 ```javascript
@@ -888,7 +871,7 @@ o2sql
    .toParams();
 
 {
-	sql: 'SELECT COUNT(*)::INTEGER AS count FROM "user" WHERE "groupId" = $1',
+  sql: 'SELECT COUNT(*)::INTEGER AS count FROM "user" WHERE "groupId" = $1',
   values: [ 1 ]
 }
 ```
@@ -899,7 +882,7 @@ o2sql
   .count(['companyId'])
   .from('user')
   .where({
-  	groupd: 1,
+    groupd: 1,
   })
   .distinct()
    .toParams();
@@ -908,18 +891,16 @@ o2sql
   .count('user')
   .select(['companyId'])
   .where({
-  	groupd: 1,
+    groupd: 1,
   })
   .distinct()
    .toParams();
 
 {
-	sql: 'SELECT DISTINCT COUNT("companyId")::INTEGER AS count FROM "user" WHERE "groupd" = $1',
+  sql: 'SELECT DISTINCT COUNT("companyId")::INTEGER AS count FROM "user" WHERE "groupd" = $1',
   values: [ 1 ]
 }
 ```
-
-
 
 ## Insert
 
@@ -939,34 +920,34 @@ o2sql.insertInto('user')
     name: 'Echo',
     age: 35,
   })
-	.returning(['id', 'name'])
-	.toParams();
+  .returning(['id', 'name'])
+  .toParams();
 
 {
-	sql: 'INSERT INTO "user"("name","age") VALUES ($1,$2) RETURNING "id","name"',
+  sql: 'INSERT INTO "user"("name","age") VALUES ($1,$2) RETURNING "id","name"',
   values: [ 'Echo', 35 ]
 }
 ```
 
-
-
 ## Update
 
 ```javascript
-o2sql.update(table:string)
-	.set(value:object)
-	.where(where:object)
+o2sql
+  .update((table: string))
+  .set((value: object))
+  .where((where: object));
 ```
 
 ```javascript
-o2sql.update('user')
+o2sql
+  .update('user')
   .set({
     name: 'Echo',
     age: 34,
     count: o2sql.i('count').op('+', 1),
     favs: o2sql.count('userFav').where({
       userId: o2sql.i('user.id'),
-    })
+    }),
   })
   .where({
     id: 1,
@@ -976,7 +957,7 @@ o2sql.update('user')
 
 ```javascript
 {
-	sql: 'UPDATE "user" SET "name"=$1,"age"=$2,"count"="count" + $3,"favs"=(SELECT COUNT(*)::INTEGER AS count FROM "userFav" WHERE "userId" = "user"."id") WHERE "id" = $4',
+  sql: 'UPDATE "user" SET "name"=$1,"age"=$2,"count"="count" + $3,"favs"=(SELECT COUNT(*)::INTEGER AS count FROM "userFav" WHERE "userId" = "user"."id") WHERE "id" = $4',
   values: [ 'Echo', 34, 1, 1 ]
 }
 ```
@@ -986,7 +967,7 @@ innerJoin, leftJoin, rightJoin, fullJoin also supported.
 ## Delete
 
 ```javascript
-o2sql.delete(table:string).where(where:object)
+o2sql.delete((table: string)).where((where: object));
 ```
 
 ```javascript
@@ -995,21 +976,22 @@ o2sql.delete('user').where(2).toParams();
 { sql: 'DELETE FROM "user" WHERE "id" = $1', values: [ 2 ] }
 ```
 
-
-
 # Integrate with pg
 
 ## 1. set execute handler
 
 ```javascript
 // set execute handler when you init the app
-const { Pool } = require('pg')
+const { Pool } = require('pg');
 const pool = new Pool(config);
 
 const o2sql = require('o2sql');
 
 o2sql.setOnExecuteHandler(async function({ sql: text, values }, client) {
-  const { rowCount, rows } = await (client ? client : pool).query({ text, values });
+  const { rowCount, rows } = await (client ? client : pool).query({
+    text,
+    values,
+  });
 
   let result;
   if (this instanceof o2sql.command.Count) {
@@ -1018,8 +1000,10 @@ o2sql.setOnExecuteHandler(async function({ sql: text, values }, client) {
     if (rowCount === 0) return null;
     else if (rowCount === 1) return rows[0];
     else return rows;
-  } else if (this instanceof o2sql.command.Update
-             || this instanceof o2sql.command.Delete) {
+  } else if (
+    this instanceof o2sql.command.Update ||
+    this instanceof o2sql.command.Delete
+  ) {
     return rowCount.length > 0 ? rows : null;
   } else if (this instanceof o2sql.command.Get) {
     return rowCount.length > 0 ? rows[0] : null;
@@ -1037,9 +1021,9 @@ o2sql.setOnExecuteHandler(async function({ sql: text, values }, client) {
 const user = await o2sql.get(['name', 'age'])
   .from('user')
   .where({
-  	id: 1,
+    id: 1,
   })
-	.execute();
+  .execute();
 
 { name: 'Echo Chen', age: 35 }
 ```
@@ -1059,16 +1043,18 @@ const pool = new Pool();
   try {
     await client.query('BEGIN');
 
-    await o2sql.get(['name', 'age'])
+    await o2sql
+      .get(['name', 'age'])
       .from('user')
       .where({
         id: 1,
       })
       .execute(client);
-    
-    await o2sql.delete('user')
+
+    await o2sql
+      .delete('user')
       .where({
-      	id: 1,
+        id: 1,
       })
       .execute(client);
 
@@ -1077,18 +1063,15 @@ const pool = new Pool();
     await client.query('ROLLBACK');
     throw e;
   } finally {
-  	client.release();
-	}
+    client.release();
+  }
 })().catch(e => console.error(e.stack));
-
 ```
 
 $$
-
 $$
 
 $$
-
 $$
 
 ```
