@@ -1,18 +1,15 @@
 const o2sql = require('../lib/o2sql');
 
-let x = o2sql
-  .update('user')
-  .set({
-    name: 'Echo',
-    age: 34,
-    count: o2sql.expr(o2sql.i('count'), '+', 1),
-    likes: o2sql.count('ul').where({
-      tt: 3,
-    }),
-  })
-  .where({
-    id: 1,
-  });
+// let x = o2sql
+//   .update('contact')
+//   .set({
+//     mainContact: false,
+//   })
+//   .where(3);
 
-console.dir(x, { depth: 8 });
-console.dir(x.toParams(), { depth: 8 });
+// console.dir(x, { depth: 8 });
+// console.dir(x.toParams(), { depth: 8 });
+
+const y = o2sql.delete('user').where(2);
+console.dir(y, { depth: 8 });
+console.dir(y.toParams(), { depth: 8 });
