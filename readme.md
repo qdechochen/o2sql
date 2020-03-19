@@ -1,8 +1,6 @@
-# o2sql
-
 A very simple tool to help generate postgres queries. "" will be added to table/field names.
 
-.toParams() will retun the following object, which could be used in node-postgres (https://www.npmjs.com/package/pg) directly.
+.toParams() returns the following object, which could be used in node-postgres (https://www.npmjs.com/package/pg) directly.
 
 ```
 {
@@ -11,16 +9,25 @@ A very simple tool to help generate postgres queries. "" will be added to table/
 }
 ```
 
-- This READ is still ONLY for v2. v3 has some small changes, and manual will be avaiable later. \*
-
-## toParams
+# Install
 
 ```
-o2sql.select(['id', 'name'])
+npm install o2sql
+```
+
+# Usage
+
+## Basic
+
+```
+const o2sql = require('o2sql');
+const params = o2sql.select(['id', 'name'])
   .from('user')
-  .where(4)
+  .where(1)
   .toParams();
 ```
+
+Then params will be:
 
 ```
 {
@@ -29,632 +36,1026 @@ o2sql.select(['id', 'name'])
 }
 ```
 
+## toParams()
+
+Everying inherits from ast, and can be transformed to {sql, values} by calling toParams().
+
+# API
+
 ## identifier / i
+
+```typescript
+o2sql.identifier(name:string):IdentifierAst
+```
 
 Parse an identifier to ast.
 
+```javascript
+o2sql.i('user.name').toParams();
+
+{ sql: '"user"."name"', values: [] }
 ```
-o2sql.identifier('user.name')
-o2sql.i('user.name')
-```
+
+- **ValueAst.op(op:string, right: string|number|Ast):ExprAst**
+
+  ```javascript
+  o2sql.i('age').op('+', 5).toParams();
+
+  { sql: '"age" + $1', values: [ 5 ] }
+  ```
+
+- **ValueAst.and(right: string|number|Ast):ExprAst**
+
+  Equals ValueAst.op('and', right:any):ExprAst
+
+  ```javascript
+  o2sql.i('show').and(o2sql.i('top')).toParams();
+
+  { sql: '"show" AND "top"', values: [] }
+  ```
+
+- **ValueAst.or(right: string|number|Ast):ExprAst**
+
+  Equals ValueAst.op('or', right:any):ExprAst
+
+  ```javascript
+  o2sql.i('show').or(o2sql.i('top')).toParams();
+
+  { sql: '"show" OR "top"', values: [] }
+  ```
 
 ## function / f
 
+```typescript
+o2sql.function(
+  name:string,  // function name
+  ...params:?string|number|Ast  // params
+):FunctionAst
+```
+
 Parse a function to ast. First argument is funciton name, and rest for arguments.
 
-```
-o2sql.function('func_name', p1);
-o2sql.f('func_name', p1, p2, p3);
+```javascript
+o2sql.f('foo', 1, 'abc').toParams();
+
+{ sql: '"foo"($1,$2)', values: [ 1, 'abc' ] }
 ```
 
-## select
+- **FunctionAst.op(op:string, right: string|number|Ast):ExprAst**
 
-```
-o2sql.select(columns)
-  .from(table)
-  .where(conditions)
-  .groupby(groupby)
-  .orderby(orderby)
-  .having(having)
-  .limit(limit)
-  .skip(skip)
+  ```javascript
+  o2sql.f('foo', 3).op('+', 5).toParams();
+
+  { sql: '"foo"($1) + $2', values: [ 3, 5 ] }
+  ```
+
+- **FunctionAst.and(right: string|number|Ast):ExprAst**
+
+  Equals FunctionAst.op('and', right:any):ExprAst
+
+  ```javascript
+  o2sql.f('foo',o2sql.i('show')).and(o2sql.i('top')).toParams();
+
+  { sql: '"foo"("show") AND "top"', values: [] }
+  ```
+
+- **FunctionAst.or(right: string|number|Ast):ExprAst**
+
+  Equals FunctionAst.op('or', right:any):ExprAst
+
+  ```javascript
+  o2sql.f('foo',o2sql.i('show')).or(o2sql.i('top')).toParams();
+
+  { sql: '"foo"("show") OR "top"', values: [] }
+  ```
+
+## value / v
+
+```typescript
+o2sql.value(value:string|number):ValueAst
 ```
 
-```
-paginate(page, pageSize)
+Make a value ast.
+
+```javascript
+o2sql.v(5).toParams();
+
+{ sql: '$1', values: [ 5 ] }
 ```
 
-### About columns:
+- **ValueAst.op(op:string, right: string|number|Ast):ExprAst**
 
-#### Basic (plain)
+  ```javascript
+  o2sql.v(3).op('+', 5).toParams();
 
+  { sql: '$1 + $2', values: [ 3, 5 ] }
+  ```
+
+- **ValueAst.and(right: string|number|Ast):ExprAst**
+
+  Equals ValueAst.op('and', right:any):ExprAst
+
+  ```javascript
+  o2sql.v(true).and(o2sql.i('top')).toParams();
+
+  { sql: '$1 AND "top"', values: [ true ] }
+  ```
+
+- **ValueAst.or(right: string|number|Ast):ExprAst**
+
+  Equals ValueAst.op('or', right:any):ExprAst
+
+  ```javascript
+  o2sql.v(true).or(o2sql.i('top')).toParams();
+
+  { sql: '$1 OR "top"', values: [ true ] }
+  ```
+
+## expr / e
+
+```typescript
+o2sql.expr(
+  left:string|number|Ast,
+  op:string,
+  right:string|number|Ast
+):ExprAst
 ```
-['id', 'gender', ['name', 'userName'], ['age', 'userAge', 'int'], [o2sql.function('func_name', o2sql.identifier('name'), 2), 'cal_value'], [o2sql.select(['id']).from('anotherTable').where(1), 'subQuery']]
-// "id", "gender", "name" AS "userName", "age"::int AS "userAge", "func_name"("name", $1) AS "cal_value", (SELECT "id" FROM "anotherTable" WHERE "id" = $2) AS "subQuery"
+
+Make an expression ast. This is very useful in UPDATE.
+
+```javascript
+o2sql.e(o2sql.i('count'), '+', 1).toParams();
+
+{ sql: '"count" + $1', values: [ 1 ] }
+```
+
+This equals to:
+
+```javascript
+o2sql
+  .i('count')
+  .op('+', 1)
+  .toParams();
+```
+
+- **ExprAst.op(op:string, right:string|number|Ast):ExprAst**
+
+  ```javascript
+  o2sql.e(5, '+', 6).op('*', 7).toParams();
+
+  { sql: '($1 + $2) * $3', values: [ 5, 6, 7 ] }
+  ```
+
+  ```javascript
+  o2sql.e(5, '+', 6).op('*', o2sql.i('rank')).toParams();
+
+  { sql: '($1 + $2) * "rank"', values: [ 5, 6 ] }
+  ```
+
+- **ExprAst.and(right: string|number|Ast):ExprAst**
+
+  Equals ValueAst.op('and', right:any):ExprAst
+
+  ```javascript
+  o2sql.e(o2sql.i('rank'), '=', 5).and(o2sql.i('top')).toParams();
+
+  { sql: '"rank" = $1 AND "top"', values: [ 5 ] }
+  ```
+
+- **ExprAst.or(right: string|number|Ast):ExprAst**
+
+  Equals ValueAst.op('or', right:any):ExprAst
+
+  ```javascript
+  o2sql.e(o2sql.i('rank'), '=', 5).or(o2sql.i('top')).toParams();
+
+  { sql: '"rank" = $1 OR "top"', values: [ 5 ] }
+  ```
+
+## table / t
+
+```javascript
+o2sql.table(table:string|array|object):TableAst
+```
+
+- **table(table:string):TableAst**
+
+```javascript
+o2sql.t('user').toParams();
+
+{ sql: '"user"', values: [] }
+```
+
+- **table([table:string, alias:string]:array):TableAst**
+
+```javascript
+o2sql.t(['user', 'U']).toParams();
+
+{ sql: '"user" "U"', values: [] }
+```
+
+- **table({table:string, alias:string}:object):TableAst**
+
+```javascript
+o2sql.t({table:'user', alias:'U'}).toParams();
+
+{ sql: '"user" "U"', values: [] }
+```
+
+About how to join tables, please see [join](###join) of Select.
+
+## Select
+
+```typescript
+o2sql.select(columns:array)
+  .distinct(distinct:string|array)
+  .from(table:string|object)
+  .where(where:object)
+  .groupby(groupby:string|array)
+  .orderby(orderby:string|array)
+  .having(having:object)
+  .limit(limit:number)
+  .skip(skip:number)
+	.union(union:Select)
+```
+
+```typescript
+paginate(page:number, pageSize:number)
+// short for .limit(limit).skip(skip)
+```
+
+### select
+
+```javascript
+o2sql.select(columns:array):Select
+```
+
+
+
+#### Basic
+
+- column name
+
+```javascript
+o2sql.select(['id', 'name', 'dept.name']).toParams()
+
+{ sql: 'SELECT "id","name","dept"."name"', values: [] }
+```
+
+- alias name
+
+```javascript
+o2sql.select(['deptId', ['dept.name', 'deptName']).toParams();
+
+{ sql: 'SELECT "deptId","dept"."name" "deptName"', values: [] }
+```
+
+- cast value
+
+```javascript
+o2sql.select(['id', ['age', 'userAge', 'int']]).toParams();
+
+{
+  sql: 'SELECT "id",CAST("age" AS INTEGER) "userAge"',
+  values: []
+}
+```
+
+- function / expr
+
+```javascript
+o2sql.select([
+	[o2sql.f('foo', o2sql.i('col1'), o2sql.i('col2'), 5), 'total'],
+	[o2sql.e(o2sql.i('col3'), '+', '_append_string'), 'appendedString', 'string'],
+])
+  .toParams();
+
+{
+	sql: 'SELECT "foo"("col1","col2",$1) "total",CAST("col3" + $2 AS VARCHAR) "appendedString"',
+	values: [ 5, '_append_string' ]
+}
+```
+
+- sub query
+
+```javascript
+o2sql.select([
+	[o2sql.select(['name']).from('group').where({id: o2sql.i('user.groupId')}), 'groupName']
+])
+  .from('user')
+  .toParams();
+
+{
+  sql: 'SELECT (SELECT "name" FROM "group" WHERE "id" = "user"."groupId") "groupName" FROM "user"',
+  values: []
+}
 ```
 
 #### Multi table
 
-```
-[{
-  table: 'user',
-  fields: ['id', 'name', 'gender'],
-}, {
-  table: 'group',
-  fields: ['id', 'name', ['category', 'kind'],
-  prefix: 'group',
-}, {
-  table: 'company',
-  fields: ['id', 'name'],
-  prefix: 'company',
-  separator: '_',
-}]
-//
-"id", "name", "gender", "groupId", "groupName", "groupKind", "company_id", "company_name"
+```javascript
+o2sql.select([
+  {
+    table: 'user',
+    fields: ['id', 'name', 'gender'],
+  },
+  {
+    table: 'group',
+    fields: ['id', 'name', ['category', 'kind']],
+    prefix: 'group',
+  },
+  {
+    table: 'company',
+    fields: ['id', 'name'],
+    prefix: 'company',
+    separator: '_',
+  }
+]).toParams();
+
+{
+	sql: 'SELECT "user"."id" "userId","user"."name" "userName","user"."gender" "userGender","group"."id" "groupId","group"."name" "groupName","category" "groupKind","company"."id" "company_id","company"."name" "company_name"',
+	values: []
+}
+
 ```
 
 Mixed usage is also supported, but you need to make sure every plain field is unique.
 
-```
-['firstName', 'lastName', {
-  table: 'group',
-  fields: ['id', 'name', ['category', 'kind'],
-  prefix: 'group',
-}]
+```javascript
+o2sql.select([
+  'firstName',
+  'lastName',
+  {
+    table: 'group',
+    fields: ['id', 'name', ['category', 'kind']],
+    prefix: 'group',
+  }
+]).toParams();
+
+{
+  sql: 'SELECT "firstName","lastName","group"."id" "groupId","group"."name" "groupName","category" "groupKind"',
+  values: []
+}
 ```
 
-### About distinct:
+### distinct
 
+```javascript
+.distinct(distinct:?array):Select
 ```
-o2sql.select(['id', 'group'])
-  .from('user')
+
+- **distinct all**
+
+```javascript
+o2sql.select(['id', 'name', 'groupId'])
   .distinct()
-// select distinct "id", "group" from "user"
+  .toParams();
+
+{ sql: 'SELECT DISTINCT "id","name",groupId"', values: [] }
 ```
 
-```
-o2sql.select(['id', 'group', 'name'])
+- **disinct on**
+
+```javascript
+o2sql.select(['id', 'name', 'groupId'])
   .from('user')
-  .distinct(['id', 'group']);
-// SELECT distinct on ( "id", "group" ) "id", "group", "name" FROM "user"
+  .distinct(['groupId'])
+  .toParams();
+
+{
+  sql: 'SELECT DISTINCT ON ("groupId") "id","name","groupId" FROM "user"',
+  values: []
+}
 ```
 
-### About tables:
+### from
 
-o2sql.selct(['id']).from(table)
-
-#### Basic (plain)
-
-```
-'user'
+```javascript
+Select.from(table:string|array|TableAst|object):Select
 ```
 
-#### Join
 
-##### Chaining style
 
-o2sql.select(['id])
-.from(tableA)
-.join(tableB, on, isMainTable)
+See [table / t](##table / t) for param details.
 
-```
-.from('user')
-.join('group', ['groupId', 'id'])
-// FROM "user" INNER JOIN "group" ON "user"."groupId" = "group"."id"
+```javascript
+o2sql.select(['id'])
+	.from(o2sql.t('user'))
+	.toParams();
+
+{ sql: 'SELECT "id" FROM "user"', values: [] }
 ```
 
+```javascript
+o2sql.select(['id'])
+	.from(o2sql.t('user').innerJoin('dept', ['user.deptId', 'dept.id']))
+	.toParams();
+
+{
+  sql: 'SELECT "id" FROM "user" INNER JOIN "dept" ON "user"."deptId" = "dept"."id"',
+  values: []
+}
 ```
-.from('user')
-.join('group', {
-  'user.groupId': o2sql('group.id'),
-})
-.leftJoin('dept', {
-  'user.kind': 'normal',
-  $$: {
-    left: o2sql('user.gid'),
+
+
+
+### join
+
+```javascript
+Select.innerJoin(table:string|array|tableAst|object,on:array|object):Select
+Select.leftJoin(table:string|array|tableAst|object,on:array|object):Select
+Select.rightJoin(table:string|array|tableAst|object,on:array|object):Select
+Select.fullJoin(table:string|array|tableAst|object,on:array|object):Select
+Select.crossJoin(table:string|array|tableAst|object,on:array|object):Select
+```
+
+- **table:string|array|object**
+
+  See [table / t](##table / t) for param details.
+
+- **table:TableAst**
+
+  ```javascript
+  o2sql.select(['id'])
+  	.from('user')
+  	.innerJoin(
+    	o2sql.table('dept')
+    		.innerJoin(
+          'org',
+          ['dept.orgId','org.id']
+       	),
+    	['user.deptId', 'dept.id']
+  	).toParams();
+  
+  {
+    sql: 'SELECT "id" FROM "user" INNER JOIN ("dept" INNER JOIN "org" ON "dept"."orgId" = "org"."id" ON "user"."deptId" = "dept"."id")',
+    values: []
+  }
+  ```
+
+  
+
+- ##### on:array
+
+```javascript
+o2sql.select(['id'])
+  .from('user')
+  .join('group', ['groupId', 'group.id'])
+  .toParams();
+
+{
+  sql: 'SELECT "id" FROM "user" INNER JOIN "group" ON "groupId" = "group"."id"',
+  values: []
+}
+```
+
+- **on:object**
+
+```javascript
+o2sql.select(['id'])
+  .from('user')
+  .rightJoin('group', {
+    left: o2sql.i('groupId'),
     op: '=',
-    right: o2sql('group.id'),
-  },
-})
-.rightJoin('organization', ['orgId', 'id'])
-// FROM "user" INNER JOIN "group" ON "user"."groupId" = "group"."id" LEFT JOIN "dept" ON "user"."kind" = $1 AND "user"."gid" = "group"."id" RIGHT JOIN "organization" ON "user"."orgId" = "organization"."id"
-```
+    right: o2sql.i('group.id'),
+  })
+  .toParams();
 
-main table could be set in two ways
-
-```
-.join('dept', [...], true)
-```
-
-OR
-
-```
-.join({
-  name: 'dept',
-  main: true,
-}, [...])
-```
-
-##### Object style
-
-o2sql.selct(['id']).from(objectStyleTable)
-
-```
 {
-  left: {
-    name: 'user',
-    key: 'groupId',
-    main: true, // all fields without table name will be prepended "user".
-  },
-  right: {
-    name: 'group',
-    key: 'id',
-  },
+  sql: 'SELECT "id" FROM "user" RIGHT JOIN "group" ON "groupId" = "group"."id"',
+  values: []
 }
-// "user" INNER JOIN "group" ON "user"."groupId"="group"."id"
 ```
 
-on is a "where" like object.
+- **on:ExprAst**
+  Advanced usage.
 
-```
+```javascript
+o2sql
+  .select(['id'])
+  .from('user')
+  .join(
+    'group',
+    o2sql.i('groupId').op('=', o2sql.i('group.id'))
+      .and(o2sql.i('group.kind').op('=', 'admin'))
+  )
+  .toParams();
+
 {
-  left: {
-    name: 'user',
-    alias: 'U',
-  },
-  right: {
-    name: 'group',
-    alias: 'G',
-  },
-  join: 'LEFT JOIN',
-  on: {
-    'U.groupId': o2sql('G.id'),
-  },
+  sql: 'SELECT "id" FROM "user" INNER JOIN "group" ON "groupId" = "group"."id" AND "group"."kind" = $1',
+  values: [ 'admin' ]
 }
-// "user" "U" LEFT JOIN "group" "G" ON "U"."groupId" = "G"."id"
 ```
 
-```
-{
-  left: {
-    left: {
-      name: 'user',
-      alias: 'U',
-    },
-    right: {
-      name: 'group',
-      alias: 'G',
-    },
-    join: 'LEFT JOIN',
-    on: {
-      'U.kind': 'normal',
-      $$: {
-        left: o2sql('U.gid'),
-        op: '=',
-        right: o2sql('G.id'),
-      },
-    },
-    key: 'U.companyId',
-  },
-  right: {
-    name: 'company',
-    key: 'id',
-  },
-}
-// "user" "U" LEFT JOIN "group" "G" ON "U"."kind" = $1 AND "U"."gid" = "G"."id" INNER JOIN "company" ON "U"."companyId" = "company"."id"
+
+
+### where:
+
+```javascript
+where(where:string|number|array|object):Select
 ```
 
-```
-{
-  left: {
-    name: 'user',
-    alias: 'U',
-  },
-  right: {
-    left: {
-      name: 'group',
-      alias: 'G',
-      key: 'groupKindId',
-    },
-    right: {
-      name: 'groupKind',
-      alias: 'GK',
-      key: 'id',
-    },
-  },
-  join: 'LEFT JOIN',
-  on: {
-    'U.groupId': o2sql('G.id'),
-  },
-}
-// "user" "U" LEFT JOIN ("group" "G" INNER JOIN "groupKind" "GK" ON "G"."groupKindId" = "GK"."id") ON "U"."groupId" = "G"."id"
-```
 
-### About where:
 
 #### Number/String
 
-where(8) is short for where({ id: 8 })
+```javascript
+where(id:string|number):Select
+// equals to
+where({
+  id:string|number
+}):Select
+```
+
+```javascript
+o2sql.select(['id']).from('user').where(1).toParams();
+
+{
+  sql: 'SELECT "id" FROM "user" WHERE "id" = $1',
+  values: [ 1 ]
+}
+```
 
 #### AND
 
-```
+```javascript
+o2sql.select(['id'])
+	.from('user')
+	.where({
+    groupId: 3,
+    gender: 'M',
+  })
+  .toParams();
+  
 {
-  groupId: 3,
-  gender: 'M',
+	sql: 'SELECT "id" FROM "user" WHERE "groupId" = $1 AND "gender" = $2',
+  values: [ 3, 'M' ]
 }
-// "groupId" = $2 AND "gender" = $1
 ```
-
-$1, $2 will be pushed in **values**
 
 #### OR
 
-1. Any key starts with \$ will be ignored, and its value will be treated seperately;
-2. OR wil be used if the key is ignored, and its value is an array.
+- **where(where:array)**
 
-```
-{
-  $or: [{
-      groupId: 3,
-    }, {
-      gender: 'M',
-    }],
-}
-// ("groupId" = $2 OR "gender" = $1)
-```
+  ```javascript
+  o2sql.select(['id'])
+  	.from('user')
+  	.where([
+      {
+        groupId: 3
+      },
+      {
+        groupId: 4
+      }
+    ]).toParams();
+  
+  {
+    sql: 'SELECT "id" FROM "user" WHERE "groupId" = $1 OR "groupId" = $2',
+    values: [ 3, 4 ]
+  }
+  ```
 
-```
-{
-  $or1: [{
-      groupId: 3,
-    }, {
+- **OR in AND**
+
+  - If the name of an attribute startsWith '$' and value is an array (this feature will be removed in the next main version).
+  - OR the name of an attribute is a Symbol and value is an array.
+
+  ```javascript
+  o2sql.select(['id'])
+  	.from('user')
+  	.where({
       gender: 'M',
-    }],
-  $or2: [{
-      groupId: 4,
-    }, {
-      gender: 'F',
-    }],
-}
-// ("groupId" = $4 OR "gender" = $3) AND ("groupId" = $2 OR "gender" = $1)
-```
+      [Symbol()]:[
+        {
+          groupId: 3
+        },
+        {
+          groupId: 4,
+          rank: 2,
+        }
+      ]
+    }).toParams();
+  
+  {
+  	sql: 'SELECT "id" FROM "user" WHERE "gender" = $1 AND ("groupId" = $2 OR "groupId" = $3 AND "rank" = $4)',
+    values: [ 'M', 3, 4 ]
+  }
+  ```
+
+
 
 #### Other operators
 
-```
+```javascript
+o2sql.select(['id'])
+	.from('user')
+	.where({
+    groupId: 3,
+    gender: 'M',
+  	vip: false,
+	  address: {
+      '<>': null,
+    },
+  	grade: null,
+  	age: {
+      '>=': 18,
+      '<': 60
+    },
+  	role: ['user', 'admin'],
+  	name: {
+      ILIKE: '%Mia%'
+    },
+  	sectors: {
+      '&&': ['a', 'b', 'c'],
+      '@>': ['a', 'b'],
+    }
+  })
+  .toParams();
+  
 {
-  name: {
-    "IS NOT": null,
-  },
-  title: {
-    LIKE: '%abc',
-  },
-  age: [22, 23, 24],
-  sector: {
-    '&&': ['a', 'b', 'c'],
-    '@>': ['a', 'b'],
-  },
-  groupId: {
-    '&&': [1, 2, 3],
-  },
-  stars: {
-    between: [3,5];
-  }
+	sql: 'SELECT "id" FROM "user" WHERE "groupId" = $1 AND "gender" = $2 AND "vip" = $3 AND "address" IS NOT NULL AND "grade" IS NULL AND "age" >= $4 AND "age" < $5 AND "role"=ANY(ARRAY[$6,$7]::VARCHAR[]) AND "name" ILIKE $8 AND "sectors" && ARRAY[$9,$10,$11]::VARCHAR[] AND "sectors" @> ARRAY[$12,$13]::VARCHAR[]',
+  values:
+   [ 3,
+     'M',
+     false,
+     18,
+     60,
+     'user',
+     'admin',
+     '%Mia%',
+     'a',
+     'b',
+     'c',
+     'a',
+     'b' ]
 }
-// "name" IS NOT NULL AND "title" LIKE $18 AND "age" IN ($15,$16,$17) AND "sector" && ARRAY[$12,$13,$14]::VARCHAR[] AND "sector" @> ARRAY[$10,$11]::VARCHAR[] AND "groupId" && ARRAY[$7,$8,$9]::INTEGER[] AND "stars" BETWEEN $2 AND $3
-```
-
-Many operators are supported, eg. >=, ILIKE, ...
-
-#### Free mode
 
 ```
-{
-  $1: {
-    $left: o2sql.f('my_function1', o2sql.i('field1')),
-    $op: '>=',
-    $right: o2sql.i('field2'),
-  },
-}
-// "id" = ANY($3, $4, $5) AND ("gender" = $2 OR "groupKind" = $1) AND my_function1("field1") >= my_function2("field2", "field3")
-```
 
-\*\* You just need to give it a key starts with \$\$.
 
 #### Subquery
 
-```
+```javascript
+o2sql.select(['id', 'name'])
+	.from('user')
+	.where({
+    groupId: {
+    	IN: o2sql.select(['id']).from('group').where({
+        groupKind: 'a',
+      }),
+		}
+	})
+	.toParams();
+
 {
-  groupId: {
-    IN: o2sql.select(['id']).from('group').where({
-      groupKind: 'a',
-    }),
-  }
+  sql: 'SELECT "id","name" FROM "user" WHERE "groupId"=ANY(SELECT "id" FROM "group" WHERE "groupKind" = $1)',
+  values: [ 'a' ]
 }
-// "groupId" IN (SELECT "id" FROM "group" WHERE "groupKind" = $1)
 ```
 
+
+#### Free mode
+
+```javascript
+o2sql.select(['id'])
+	.from('user')
+	.where({
+		[Symbol()]: {
+ 			$left: o2sql.f('foo'),
+			$op: '>=',
+  		$right: o2sql.i('age'),
+		},
+	})
+	.toParams();
+	
+{
+	sql: 'SELECT "id" FROM "user" WHERE "foo"() >= "age"',
+  values: []
+}
 ```
-o2sql.select(['id', 'name']).from({
-  left: {
-    name: o2sql
-      .select(['id', 'name', 'deptId'])
-      .from('dept')
-      .where({ orgId: 5 }),
-    key: 'id',
-    alias: 'myDept',
-  },
-  right: {
-    name: 'user',
-    key: 'deptId',
-  }
-});
-// SELECT "id", "name" FROM (SELECT "id", "name", "deptId" FROM "dept" WHERE "orgId" = $1) "myDept" INNER JOIN "user" ON "myDept"."id" = "user"."deptId"
+
+```javascript
+o2sql
+  .select(['id'])
+  .from('user')
+  .where(o2sql.e(o2sql.i('age'), '>', 18))
+	.toParams();
+	
+{
+	sql: 'SELECT "id" FROM "user" WHERE "age" > $1',
+  values: [18]
+}
 ```
+
+
 
 ### groupby
 
-```
-groupby(['user.groupId', 'user.kind'])
+```javascript
+groupby(groupby:string|array):Select
 ```
 
-```
-// If you set main table to user
-groupby(['groupId', '.random'])
-// group by "user"."groupId", "random"
+```javascript
+o2sql.select(['role', [o2sql.f('count', o2sql.i('id')), 'count']])
+	.from('user')
+	.groupby(['role'])
+	// .groupby('role')
+	.toParams();
+
+{
+	sql: 'SELECT "role","count"("id") "count" FROM "user" GROUP BY "role"',
+  values: []
+}
 ```
 
 ### orderby
 
-```
-order(['id', '-name', ['gender', 'desc']])
+```javascript
+orderby(order:string|array):Select
 ```
 
--name is shor for ['name', 'desc']
+```javascript
+o2sql.select(['id', 'name'])
+	.from('user')
+	.orderby(['id', '-name'])
+	// .orderby(['id', ['name', 'DESC']])
+	// .orderby('id')
+	.toParams();
 
-```
-// If you set main table to user
-orderby(['groupId', '.random'])
-// order by "user"."groupId", "random"
-// This is very useful when you have computed field like [o2sql.f('random'), 'random']
+{
+	sql: 'SELECT "id","name" FROM "user" ORDER BY "id" ASC,"name" DESC',
+  values: []
+}
 ```
 
 ### having
 
-```
-having(having)
+```javascript
+having(having::string|number|array|object):Select
 ```
 
-Same as where
+Same as [where](###where)
 
 ### paginate, limit and skip
 
-```
-limit(10).skip(20)
-```
+```javascript
+limit(limit:int).skip(skip:int):Select
 
-```
-paginate(page, pageSize)
-```
-
-is short for:
-
-```
+paginate(page:int, pageSize:int):Select
+// equals
 limit(pageSize).skip(pageSize * (page - 1))
+```
+
+```javascript
+o2sql
+  .select(['id', 'name'])
+  .from('user')
+  .paginate(2, 10)
+	.toParams();
+
+{
+  sql: 'SELECT "id","name" FROM "user" LIMIT $1 OFFSET $2',
+  values: [ 10, 10 ]
+}
 ```
 
 ### union
 
-```
+```javascript
 o2sql
   .select(['id', 'name'])
   .from('dept1')
   .where({ orgId: 5 })
   .union(
     o2sql
-      .select(['id', 'name'])
-      .from('dept2')
-      .where({ orgId: 3 })
-  );
-// SELECT "id", "name" FROM "dept1" WHERE "orgId" = $1 UNION SELECT "id", "name" FROM "dept2" WHERE "orgId" = $2
+    .select(['id', 'name'])
+    .from('dept2')
+    .where({ orgId: 3 })
+  )
+  .toParams();
+  
+{
+	sql: 'SELECT "id","name" FROM "dept1" WHERE "orgId" = $1 UNION ALL SELECT "id","name" FROM "dept2" WHERE "orgId" = $2',
+  values: [ 5, 3 ]
+}
 ```
 
-## get
+## Get
 
 ```
-o2sql.get(columns)
-  .from(table)
+o2sql.get(columns:array)
+  .distinct(distinct:string|array)
+  .from(table:string|object)
+  .where(where:object)
+  .groupby(groupby:string|array)
+  .orderby(orderby:string|array)
+  .having(having:object)
+  .skip(skip:number)
 ```
 
-get(columns) is short for:
+Get inherits from Select, and set limit(1) automatically. There's no limit and union method, others are the same with select.
 
-```
-o2sql('get')
-  .select(columns)
-```
-
-get is same as select, and it set limit(1) automatically.
-
-## count
-
-```
-o2sql.count(table)  // table should be a string or object, same as from of 'select'
-  .where(where)
-  .distinct()
+```javascript
+o2sql.get(['id', 'name'])
+	.from('user')
+	.toParams();
+	
+{
+	sql: 'SELECT "id","name" FROM "user" LIMIT $1',
+  values: [ 1 ]
+}
 ```
 
-```
-o2sql.count(columns)  // colmns should be an array
-  .from(from)
-  .distinct()
+## Count
+
+```javascript
+o2sql.count(table:string).where(where:object)
+o2sql.count(columns:array)
+  .distinct(distinct:string|array)
+  .from(table:string|object)
+  .where(where:object)
+  .groupby(groupby:string|array)
+  .orderby(orderby:string|array)
+  .having(having:object)
 ```
 
-```
+```javascript
 o2sql
   .count('user')
   .where({
-    groupd: 1,
-  })
-// SELECT count( * )::INTEGER AS count FROM "user" WHERE "groupd" = $1
+     groupId: 1,
+   })
+   .toParams();
+
+{
+	sql: 'SELECT COUNT(*)::INTEGER AS count FROM "user" WHERE "groupId" = $1',
+  values: [ 1 ]
+}
 ```
 
-```
+```javascript
+
 o2sql
   .count(['companyId'])
   .from('user')
   .where({
-    groupd: 1,
+  	groupd: 1,
   })
-  .distinct();
+  .distinct()
+   .toParams();
 // OR
 o2sql
   .count('user')
   .select(['companyId'])
   .where({
-    groupd: 1,
+  	groupd: 1,
   })
-  .distinct();
-// SELECT count( distinct "companyId" )::INTEGER AS count FROM "user" WHERE "groupd" = $1
+  .distinct()
+   .toParams();
+
+{
+	sql: 'SELECT DISTINCT COUNT("companyId")::INTEGER AS count FROM "user" WHERE "groupd" = $1',
+  values: [ 1 ]
+}
 ```
 
-where for count is same as where for select.
-join, leftJoin, rightJoin is also supported.
 
-## insert
 
+## Insert
+
+```javascript
+o2sql.insert(values:object|array)
+  .into(table:string);
+  .returning(columns:array);
+
+o2sql.insertInto(table:name)
+  values(values:object|array)
+  .returning(columns:array);
 ```
-o2sql.insert(values)
-  .into(table);
-  .returning(columns);
 
-o2sql.insertInto(table)
-  values(values)
-  .returning(columns);
-```
-
-If values is an Object, it will insert one record. If values is an Array of Object, it will insert multiple records.
-
-Eg.
-
-```
+```javascript
 o2sql.insertInto('user')
-  .values([{
+  .values({
     name: 'Echo',
-    age: 34,
-    likes: o2sql.count('ul').where({
-      tt: 3,
-    })
-  }, {
-    name: 'Echo',
-    age: 34,
-    likes: 5,
-  }])
-  .returning(['id', 'name']);
+    age: 35,
+  })
+	.returning(['id', 'name'])
+	.toParams();
+
+{
+	sql: 'INSERT INTO "user"("name","age") VALUES ($1,$2) RETURNING "id","name"',
+  values: [ 'Echo', 35 ]
+}
 ```
 
-```
-  {
-    sql:
-   'INSERT INTO "user" ("name","age","likes") VALUES ($1,$2,(SELECT COUNT(*)::int AS "count" FROM "ul" WHERE "tt" = $3)),($4,$5,$6) RETURNING "id", "name"',
-    values: [ 'Echo', 34, 3, 'Echo', 34, 5 ],
-  }
+
+
+## Update
+
+```javascript
+o2sql.update(table:string)
+	.set(value:object)
+	.where(where:object)
 ```
 
-## update
-
-```
-o2sql.update(table)
-  .set(value)
-  .where(where)
-```
-
-Eg.
-
-```
+```javascript
 o2sql.update('user')
   .set({
     name: 'Echo',
     age: 34,
-    count: o2sql.expr(o2sql.i('count'), '+', 1),
-    likes: o2sql.count('ul').where({
-      tt: 3,
+    count: o2sql.i('count').op('+', 1),
+    favs: o2sql.count('userFav').where({
+      userId: o2sql.i('user.id'),
     })
   })
   .where({
     id: 1,
-  });
+  })
+  .toParams();
 ```
 
-```
+```javascript
 {
-  sql:
-   'UPDATE "user" SET "name"=$1, "age"=$2, "count"="count" + $3, "likes"=(SELECT COUNT(*)::int AS "count" FROM "ul" WHERE "tt" = $4) WHERE "id" = $5',
-  values: [ 'Echo', 34, 1, 3, 1 ],
+	sql: 'UPDATE "user" SET "name"=$1,"age"=$2,"count"="count" + $3,"favs"=(SELECT COUNT(*)::INTEGER AS count FROM "userFav" WHERE "userId" = "user"."id") WHERE "id" = $4',
+  values: [ 'Echo', 34, 1, 1 ]
 }
 ```
 
-## delete
+innerJoin, leftJoin, rightJoin, fullJoin also supported.
 
-```
-o2sql.delete('user').where(2)
+## Delete
 
-o2sql.delete('user')
-  .where({
-    id: 1,
-  })
+```javascript
+o2sql.delete(table:string).where(where:object)
 ```
 
-where is required for delete, in case you delete all records.
+```javascript
+o2sql.delete('user').where(2).toParams();
 
-## execute handler (working with pg)
-
+{ sql: 'DELETE FROM "user" WHERE "id" = $1', values: [ 2 ] }
 ```
-// set execute handler when you init your app
+
+
+
+# Integrate with pg
+
+## 1. set execute handler
+
+```javascript
+// set execute handler when you init the app
 const { Pool } = require('pg')
 const pool = new Pool(config);
 
 const o2sql = require('o2sql');
+
 o2sql.setOnExecuteHandler(async function({ sql: text, values }, client) {
-  const result = await (client ? client : pool).query({ text, values });
-  if (this.command === 'select') {
-    if (this.isGet) {
-      return result.rows.length > 0 ? result.rows[0] : null;
-    } else if (this.isCount) {
-      return result.rows[0].count;
-    }
-    return result.rows;
-  } else if (this.command === 'insert') {
-    return result.rows[0];
-  } else if (this.command === 'update') {
-    return result.rows[0];
-  } else if (this.command === 'delete') {
-    return result;
+  const { rowCount, rows } = await (client ? client : pool).query({ text, values });
+
+  let result;
+  if (this instanceof o2sql.command.Count) {
+    result = rows[0].count;
+  } else if (this instanceof o2sql.command.Insert) {
+    if (rowCount === 0) return null;
+    else if (rowCount === 1) return rows[0];
+    else return rows;
+  } else if (this instanceof o2sql.command.Update
+             || this instanceof o2sql.command.Delete) {
+    return rowCount.length > 0 ? rows : null;
+  } else if (this instanceof o2sql.command.Get) {
+    return rowCount.length > 0 ? rows[0] : null;
+  } else {
+    return rows;
   }
 });
 ```
 
-### execute: query
+## 2. execute
 
-```
+### query
+
+```javascript
 const user = await o2sql.get(['name', 'age'])
   .from('user')
   .where({
-    id: 1,
+  	id: 1,
   })
-  .execute();
+	.execute();
 
+{ name: 'Echo Chen', age: 35 }
 ```
 
-### execute: with transaction
+### transaction
 
 Refer to https://node-postgres.com/features/transactions for more about transactions in pg.
 
-```
+Here is just an example, write your own code accordingly.
+
+```javascript
 const { Pool } = require('pg');
 const pool = new Pool();
 
 (async () => {
+  const client = pool.connect();
   try {
     await client.query('BEGIN');
 
@@ -664,9 +1065,10 @@ const pool = new Pool();
         id: 1,
       })
       .execute(client);
+    
     await o2sql.delete('user')
       .where({
-        id: 1,
+      	id: 1,
       })
       .execute(client);
 
@@ -675,8 +1077,28 @@ const pool = new Pool();
     await client.query('ROLLBACK');
     throw e;
   } finally {
-    client.release();
-  }
+  	client.release();
+	}
 })().catch(e => console.error(e.stack));
+
+```
+
+$$
+
+$$
+
+$$
+
+$$
+
+```
+
+```
+
+```
+
+```
+
+```
 
 ```
