@@ -23,9 +23,9 @@
   "keywords": [
     "database",
     "pg",
-    "postgre",
     "postgres",
     "postgresql",
+    "mysql",
     "osql",
     "o2sql"
   ],

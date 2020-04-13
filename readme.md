@@ -192,10 +192,7 @@ o2sql.e(o2sql.i('count'), '+', 1).toParams();
 This equals to:
 
 ```javascript
-o2sql
-  .i('count')
-  .op('+', 1)
-  .toParams();
+o2sql.i('count').op('+', 1).toParams();
 ```
 
 - **ExprAst.op(op:string, right:string|number|Ast):ExprAst**
@@ -987,7 +984,7 @@ const pool = new Pool(config);
 
 const o2sql = require('o2sql');
 
-o2sql.setOnExecuteHandler(async function({ sql: text, values }, client) {
+o2sql.setOnExecuteHandler(async function ({ sql: text, values }, client) {
   const { rowCount, rows } = await (client ? client : pool).query({
     text,
     values,
@@ -1065,23 +1062,5 @@ const pool = new Pool();
   } finally {
     client.release();
   }
-})().catch(e => console.error(e.stack));
-```
-
-$$
-$$
-
-$$
-$$
-
-```
-
-```
-
-```
-
-```
-
-```
-
+})().catch((e) => console.error(e.stack));
 ```
