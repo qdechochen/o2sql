@@ -1,5 +1,25 @@
 # CHANGE LOG
 
+## v4.0.0
+
+1. Moved execution operations to o2sql-pg. o2sql now only focuses on sql generation.
+2. Default export is changed to a class. This is different from versions <= v3. You need to change your code accordingly.
+
+```javascript
+// <= v3
+const o2sql = require('o2sql');
+o2sql.select(['id', 'name']).from('user').toParams();
+
+// v4
+const O2sql = require('o2sql');
+const o2sql = new O2sql();
+o2sql.select(['id', 'name']).from('user').toParams();
+```
+
+## v3.0.6
+
+1. Added: multi datasources support
+
 ## v3.0.5
 
 1. bug fixes

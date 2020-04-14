@@ -20,7 +20,7 @@ npm install o2sql
 ## Basic
 
 ```
-const o2sql = require('o2sql');
+const o2sql = new (require('o2sql'))();
 const params = o2sql.select(['id', 'name'])
   .from('user')
   .where(1)
@@ -975,92 +975,19 @@ o2sql.delete('user').where(2).toParams();
 
 # Integrate with pg
 
-## 1. set execute handler
+The easiest way is to use [o2sql-pg](https://www.npmjs.com/package/o2sql-pg).
 
 ```javascript
-// set execute handler when you init the app
-const { Pool } = require('pg');
-const pool = new Pool(config);
-
-const o2sql = require('o2sql');
-
-o2sql.setOnExecuteHandler(async function ({ sql: text, values }, client) {
-  const { rowCount, rows } = await (client ? client : pool).query({
-    text,
-    values,
-  });
-
-  let result;
-  if (this instanceof o2sql.command.Count) {
-    result = rows[0].count;
-  } else if (this instanceof o2sql.command.Insert) {
-    if (rowCount === 0) return null;
-    else if (rowCount === 1) return rows[0];
-    else return rows;
-  } else if (
-    this instanceof o2sql.command.Update ||
-    this instanceof o2sql.command.Delete
-  ) {
-    return rowCount.length > 0 ? rows : null;
-  } else if (this instanceof o2sql.command.Get) {
-    return rowCount.length > 0 ? rows[0] : null;
-  } else {
-    return rows;
-  }
-});
+const o2sqlPg = require('o2sql-pg');
+const config = {
+  user: '** user **',
+  host: '** host **',
+  database: '** dbname **',
+  password: '** pass **',
+  port: 5432,
+};
+const o2sql = o2sqlPg(config);
+let rows = await o2sql.select(['id', 'name']).from('user').where(1).execute();
 ```
 
-## 2. execute
-
-### query
-
-```javascript
-const user = await o2sql.get(['name', 'age'])
-  .from('user')
-  .where({
-    id: 1,
-  })
-  .execute();
-
-{ name: 'Echo Chen', age: 35 }
-```
-
-### transaction
-
-Refer to https://node-postgres.com/features/transactions for more about transactions in pg.
-
-Here is just an example, write your own code accordingly.
-
-```javascript
-const { Pool } = require('pg');
-const pool = new Pool();
-
-(async () => {
-  const client = pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    await o2sql
-      .get(['name', 'age'])
-      .from('user')
-      .where({
-        id: 1,
-      })
-      .execute(client);
-
-    await o2sql
-      .delete('user')
-      .where({
-        id: 1,
-      })
-      .execute(client);
-
-    await client.query('COMMIT');
-  } catch (e) {
-    await client.query('ROLLBACK');
-    throw e;
-  } finally {
-    client.release();
-  }
-})().catch((e) => console.error(e.stack));
-```
+For more details (multi connections, transactions, etc.), please refer to [o2sql-pg](https://www.npmjs.com/package/o2sql-pg).

@@ -1,4 +1,4 @@
-const o2sql = require('../lib/o2sql');
+const o2sql = new (require('../index'))();
 
 // let x = o2sql
 //   .update('contact')

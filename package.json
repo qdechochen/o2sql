@@ -1,8 +1,8 @@
 {
   "name": "o2sql",
-  "version": "3.0.5",
+  "version": "4.0.0",
   "description": "A tool to generate postgres queries",
-  "main": "lib/o2sql.js",
+  "main": "index.js",
   "scripts": {
     "test": "node ./test/index.js",
     "debug": "node --inspect ./test/index.js"
