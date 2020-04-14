@@ -978,7 +978,7 @@ o2sql.delete('user').where(2).toParams();
 The easiest way is to use [o2sql-pg](https://www.npmjs.com/package/o2sql-pg).
 
 ```javascript
-const o2sqlPg = require('o2sql-pg');
+const O2sqlPg = require('o2sql-pg');
 const config = {
   user: '** user **',
   host: '** host **',
@@ -986,7 +986,7 @@ const config = {
   password: '** pass **',
   port: 5432,
 };
-const o2sql = o2sqlPg(config);
+const o2sql = O2sqlPg(config);
 let rows = await o2sql.select(['id', 'name']).from('user').where(1).execute();
 ```
 
