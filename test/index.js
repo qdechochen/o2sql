@@ -11,22 +11,43 @@ const o2sql = new (require('../index'))();
 // console.dir(x.toParams(), { depth: 8 });
 
 const y = o2sql
-  .select([
-    'id',
-    'name',
-    {
-      table: 'dept',
-      fields: ['id', 'name'],
-      prefix: 'dept',
-      group: true,
-    },
-  ])
+  .select(['id'])
   .from('user')
-  .innerJoin('dept', ['deptId', 'dept.id'])
-  .default('user')
   .where({
-    orgId: 3,
-  })
-  .orderby(['deptName']);
+    [Symbol()]: {
+      $left: o2sql.f('foo'),
+      $op: '>=',
+      $right: o2sql.i('age'),
+    },
+    [Symbol()]: {
+      $op: 'EXISTS',
+      $right: o2sql
+        .select(['deptId'])
+        .from('userDept')
+        .where({
+          userId: o2sql.i('user.deptId'),
+        }),
+    },
+    [Symbol()]: {
+      $right: o2sql.f(
+        'NOT EXISTS',
+        o2sql
+          .select(['deptId'])
+          .from('userDept')
+          .where({
+            userId: o2sql.i('user.deptId'),
+          })
+      ),
+    },
+    [Symbol()]: o2sql.f(
+      'EXISTS',
+      o2sql
+        .select(['groupId'])
+        .from('userGroup')
+        .where({
+          userId: o2sql.i('user.groupId'),
+        })
+    ),
+  });
 console.dir(y, { depth: 8 });
 console.dir(y.toParams(), { depth: 8 });

@@ -1,5 +1,10 @@
 # CHANGE LOG
 
+## v4.0.4
+
+1. added: Symbol() of where now support expr/function/identifier
+2. added: preserved system funciton name support, function name won't be wrapped with "". Now only EXISTS/NOT EXISTS (although they are not really funciton). More will be added soon.
+
 ## v4.0.3
 
 1. Added: group option is now back. see o2sql-pg for usage.

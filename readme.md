@@ -562,7 +562,7 @@ o2sql
    'SELECT "user"."id","user"."name","dept"."name" "deptName" FROM "user" INNER JOIN "dept" ON "user"."deptId" = "dept"."id" WHERE "user"."orgId" = $1 ORDER BY "deptName" ASC',
   values: [ 3 ]
 }
-
+```
 ### where:
 
 ```javascript
@@ -725,22 +725,54 @@ o2sql.select(['id', 'name'])
 #### Free mode
 
 ```javascript
-o2sql.select(['id'])
+o2sql
+  .select(['id'])
   .from('user')
   .where({
     [Symbol()]: {
-       $left: o2sql.f('foo'),
+      $left: o2sql.f('foo'),
       $op: '>=',
       $right: o2sql.i('age'),
     },
+    [Symbol()]: {
+      $op: 'EXISTS',
+      $right: o2sql
+        .select(['deptId'])
+        .from('userDept')
+        .where({
+          userId: o2sql.i('user.deptId'),
+        }),
+    },
+    [Symbol()]: {
+      $right: o2sql.f(
+        'NOT EXISTS',
+        o2sql
+          .select(['deptId'])
+          .from('userDept')
+          .where({
+            userId: o2sql.i('user.deptId'),
+          })
+      ),
+    },
+    [Symbol()]: o2sql.f(
+      'EXISTS',
+      o2sql
+        .select(['groupId'])
+        .from('userGroup')
+        .where({
+          userId: o2sql.i('user.groupId'),
+        })
+    ),
   })
   .toParams();
 
 {
-  sql: 'SELECT "id" FROM "user" WHERE "foo"() >= "age"',
+  sql: 'SELECT "id" FROM "user" WHERE "foo"() >= "age" AND  EXISTS (SELECT "deptId" FROM "userDept" WHERE "userId" = "user"."deptId") AND NOT EXISTS((SELECT "deptId" FROM "userDept" WHERE "userId" = "user"."deptId")) AND EXISTS((SELECT "groupId" FROM "userGroup" WHERE "userId" = "user"."groupId"))',
   values: []
 }
 ```
+
+** For EXISTS / NOT EXISTS, **
 
 ```javascript
 o2sql
