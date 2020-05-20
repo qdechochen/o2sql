@@ -267,6 +267,12 @@ About how to join tables, please see [join](###join) of Select.
 o2sql.select(columns:array)
   .distinct(distinct:string|array)
   .from(table:string|object)
+  .innerJoin(table:string|array|tableAst|object,on:array|object)
+  .leftJoin(table:string|array|tableAst|object,on:array|object)
+  .rightJoin(table:string|array|tableAst|object,on:array|object)
+  .fullJoin(table:string|array|tableAst|object,on:array|object)
+  .crossJoin(table:string|array|tableAst|object,on:array|object)
+  .default(table:string)
   .where(where:object)
   .groupby(groupby:string|array)
   .orderby(orderby:string|array)
@@ -536,11 +542,32 @@ o2sql
 }
 ```
 
+### default
+
+Set default table/alias prefix before field names.
+
+````javascript
+o2sql
+  .select(['id', 'name', ['dept.name', 'deptName']])
+  .from('user')
+  .innerJoin('dept', ['deptId', 'dept.id'])
+  .default('user')
+  .where({
+    orgId: 3,
+  })
+  .orderby(['deptName']);
+  .toParams();
+{
+  sql:
+   'SELECT "user"."id","user"."name","dept"."name" "deptName" FROM "user" INNER JOIN "dept" ON "user"."deptId" = "dept"."id" WHERE "user"."orgId" = $1 ORDER BY "deptName" ASC',
+  values: [ 3 ]
+}
+
 ### where:
 
 ```javascript
 where(where:string|number|array|object):Select
-```
+````
 
 #### Number/String
 

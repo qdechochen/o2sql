@@ -1,5 +1,13 @@
 # CHANGE LOG
 
+## v4.0.3
+
+1. Added: group option is now back. see o2sql-pg for usage.
+
+## v4.0.2
+
+1. Added: defaulTable support
+
 ## v4.0.0
 
 1. Moved execution operations to o2sql-pg. o2sql now only focuses on sql generation.
