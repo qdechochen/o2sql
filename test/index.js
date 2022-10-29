@@ -48,6 +48,9 @@ const y = o2sql
           userId: o2sql.i('user.groupId'),
         })
     ),
+    tags: {
+      '&&': ['c'],
+    },
   });
 console.dir(y, { depth: 8 });
 console.dir(y.toParams(), { depth: 8 });
