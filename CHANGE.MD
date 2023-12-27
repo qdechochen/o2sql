@@ -1,5 +1,8 @@
 # CHANGE LOG
 
+## v4.1.11
+1. uuid。
+
 ## v4.0.4
 
 1. added: Symbol() of where now support expr/function/identifier
