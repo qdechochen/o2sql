@@ -54,3 +54,10 @@ const y = o2sql
   });
 console.dir(y, { depth: 8 });
 console.dir(y.toParams(), { depth: 8 });
+console.dir(
+  o2sql
+    .where()
+    .and({ t: 1 })
+    .and(o2sql.e([{ a: 'a' }, { b: 'b' }]))
+    .___toRaw.toParams()
+);
