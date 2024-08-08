@@ -30,5 +30,8 @@
     "o2sql"
   ],
   "author": "Echo Chen <qdechochen@gmail.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  }
 }
