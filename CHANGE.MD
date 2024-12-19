@@ -1,6 +1,24 @@
 # CHANGE LOG
 
-## v4.1.11
+## 4.0.20
+
+1. added: case(when, trueValue, falseValue)
+```javascript
+const o2sql = require('o2sql');
+o2sql
+  .select([
+    'id',
+    [
+      o2sql.case({ country: 'CHN' }, o2sql.i('name'), o2sql.i('englishName')),
+      'name',
+    ],
+  ])
+  .from('user')
+  .toParams();
+```
+
+## v4.0.11
+
 1. uuid。
 
 ## v4.0.4
