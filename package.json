@@ -1,6 +1,6 @@
 {
   "name": "o2sql",
-  "version": "4.0.20",
+  "version": "4.0.21",
   "description": "A tool to generate postgres queries",
   "main": "index.js",
   "scripts": {
